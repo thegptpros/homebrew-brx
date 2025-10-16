@@ -1,0 +1,11 @@
+name: WatchApp
+bundle_id_prefix: com.brx
+targets:
+- name: WatchApp
+  platform: watchOS
+  deployment_target: '10.0'
+  sources:
+  - Sources/**/*.swift
+  resources:
+  - Resources/**
+  dependencies: []

@@ -1,0 +1,7 @@
+name: {{NAME}}
+bundle_id: {{BUNDLE_ID}}
+scheme: {{NAME}}
+destination: "platform=watchOS Simulator,name=Apple Watch Ultra 2 (49mm)"
+generator: "xcodegen"
+project: "{{NAME}}.xcodeproj"
+

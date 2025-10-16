@@ -1,0 +1,44 @@
+name: FitTracker
+options:
+  bundleIdPrefix: com.brx
+targets:
+  FitTracker:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - Sources
+    resources:
+      - Resources
+    dependencies:
+      - target: FitTracker WatchKit App
+    settings:
+      base:
+        PRODUCT_NAME: FitTracker
+        PRODUCT_BUNDLE_IDENTIFIER: com.brx.FitTracker
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_NSHealthShareUsageDescription: "FitTracker needs access to your health data to display your fitness stats and track your progress."
+        INFOPLIST_KEY_NSHealthUpdateUsageDescription: "FitTracker needs to update your health data to record your workouts and activities."
+        SWIFT_VERSION: "5.9"
+        CODE_SIGN_STYLE: Automatic
+  FitTracker WatchKit App:
+    type: application
+    platform: watchOS
+    deploymentTarget: "10.0"
+    sources:
+      - WatchApp
+    resources:
+      - WatchApp/Resources
+    settings:
+      base:
+        PRODUCT_NAME: FitTracker WatchKit App
+        PRODUCT_BUNDLE_IDENTIFIER: com.brx.FitTracker.watchkitapp
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_WKCompanionAppBundleIdentifier: com.brx.FitTracker
+        INFOPLIST_KEY_NSHealthShareUsageDescription: "FitTracker needs access to your health data to display your fitness stats."
+        INFOPLIST_KEY_NSHealthUpdateUsageDescription: "FitTracker needs to update your health data to record your workouts."
+        SWIFT_VERSION: "5.9"
+        CODE_SIGN_STYLE: Automatic

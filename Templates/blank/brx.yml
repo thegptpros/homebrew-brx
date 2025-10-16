@@ -1,0 +1,7 @@
+name: {{NAME}}
+bundle_id: {{BUNDLE_ID}}
+scheme: {{NAME}}
+destination: "platform=iOS Simulator,name=iPhone 17 Pro Max"
+generator: "xcodegen"
+project: "{{NAME}}.xcodeproj"
+

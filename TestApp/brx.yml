@@ -1,0 +1,11 @@
+name: TestApp
+bundle_id_prefix: com.brx
+targets:
+- name: TestApp
+  platform: iOS
+  deployment_target: '17.0'
+  sources:
+  - Sources/**/*.swift
+  resources:
+  - Resources/**
+  dependencies: []

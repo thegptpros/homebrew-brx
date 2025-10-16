@@ -1,0 +1,138 @@
+import Foundation
+import ArgumentParser
+
+struct RunCommand: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "run",
+        abstract: "Build, run on simulator & watch for changes"
+    )
+    
+    @Option(name: .long, help: "Target device (overrides config)")
+    var device: String?
+    
+    @Flag(name: .long, help: "Show verbose xcodebuild output")
+    var verbose: Bool = false
+    
+    @Flag(name: .long, help: "Run once without watching for changes")
+    var noWatch: Bool = false
+    
+    func run() async throws {
+        Signature.start()
+        defer { Signature.stopBlink() }
+        
+        // Require license
+        try License.requireLicense()
+        
+        Telemetry.trackCommand("run")
+        
+        // Load project spec
+        let spec = try ProjectSpec.load()
+        let config = BRXConfig.load()
+        
+        // Determine device
+        let targetDevice = device ?? config.defaults.iosDevice
+        let projectPath = spec.project ?? "\(spec.name).xcodeproj"
+        let scheme = spec.scheme ?? spec.name
+        
+        // Ensure device exists
+        let udid = try Simulator.ensureDevice(named: targetDevice, platform: .iOS)
+        
+        // Phase 1: Build (0-40%)
+        Logger.step("⚙️", "building \(spec.name) (Debug)")
+        
+        let destination = "platform=iOS Simulator,id=\(udid)"
+        let appPath = try XcodeTools.build(
+            project: projectPath,
+            scheme: scheme,
+            configuration: "Debug",
+            destination: destination
+        )
+        
+        // Phase 2: Boot (40-70%)
+        Logger.step("📱", "booting \(targetDevice) (Simulator)")
+        try Simulator.bootIfNeeded(udid: udid)
+        
+        // Phase 3: Install (70-90%)
+        try Simulator.install(appPath: appPath, toUDID: udid)
+        
+        // Phase 4: Launch (90-100%)
+        let (pid, osVersion) = try Simulator.launch(bundleId: spec.bundleId, onUDID: udid)
+        
+        Logger.success("running \"\(spec.name)\" on \(targetDevice) (ios \(osVersion)) — pid \(pid)")
+        Terminal.writeLine("")
+        
+        // Start watching for changes unless --no-watch is specified
+        if !noWatch {
+            Logger.step("👀", "watching for changes (Press Ctrl+C to stop)")
+            Terminal.writeLine("")
+            
+            let watchPaths = ["./Sources", "./Resources"].filter { FS.exists($0) }
+            
+            let liveReload = LiveReload(watchPaths: watchPaths) { changeType in
+                Task {
+                    do {
+                        let start = Date()
+                        
+                        switch changeType {
+                        case .assets:
+                            // Fast path: just reinstall
+                            try await self.fastReload(spec: spec, udid: udid)
+                            let elapsed = Date().timeIntervalSince(start)
+                            Logger.step("Δ", "assets  → fast install & relaunch (\(Int(elapsed * 1000)) ms)")
+                            
+                        case .code:
+                            // Full rebuild
+                            try await self.fullRebuild(spec: spec, config: config, udid: udid, destination: destination)
+                            let elapsed = Date().timeIntervalSince(start)
+                            Logger.step("Δ", "code    → incremental build, install, launch (\(String(format: "%.1f", elapsed)) s)")
+                        }
+                    } catch {
+                        Logger.error("Reload failed: \(error)")
+                    }
+                }
+            }
+            
+            liveReload.start()
+            
+            // Keep the process running
+            dispatchMain()
+        }
+    }
+    
+    private func fastReload(spec: ProjectSpec, udid: String) async throws {
+        // Terminate app
+        try Shell.run("xcrun", args: ["simctl", "terminate", udid, spec.bundleId])
+        
+        // Find .app path
+        let appPath = ".brx/DerivedData/Build/Products/Debug-iphonesimulator/\(spec.name).app"
+        
+        // Reinstall
+        try Simulator.install(appPath: appPath, toUDID: udid)
+        
+        // Relaunch
+        _ = try Simulator.launch(bundleId: spec.bundleId, onUDID: udid)
+    }
+    
+    private func fullRebuild(spec: ProjectSpec, config: BRXConfig, udid: String, destination: String) async throws {
+        // Build
+        let projectPath = spec.project ?? "\(spec.name).xcodeproj"
+        let scheme = spec.scheme ?? spec.name
+        
+        let appPath = try XcodeTools.build(
+            project: projectPath,
+            scheme: scheme,
+            configuration: "Debug",
+            destination: destination
+        )
+        
+        // Terminate
+        try Shell.run("xcrun", args: ["simctl", "terminate", udid, spec.bundleId])
+        
+        // Install
+        try Simulator.install(appPath: appPath, toUDID: udid)
+        
+        // Launch
+        _ = try Simulator.launch(bundleId: spec.bundleId, onUDID: udid)
+    }
+}
+

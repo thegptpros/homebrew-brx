@@ -1,0 +1,36 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: macos-14
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+      
+      - name: Build Release
+        run: make build
+      
+      - name: Create Archive
+        run: |
+          cd .build/release
+          tar -czf brx-${{ github.ref_name }}-macos.tar.gz BRX
+          mv brx-${{ github.ref_name }}-macos.tar.gz ../../
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: brx-${{ github.ref_name }}-macos.tar.gz
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

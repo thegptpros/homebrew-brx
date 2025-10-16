@@ -1,0 +1,22 @@
+name: WatchApp
+options:
+  bundleIdPrefix: com.brx
+targets:
+  WatchApp:
+    type: application
+    platform: watchOS
+    deploymentTarget: "10.0"
+    sources:
+      - Sources
+    resources:
+      - Resources
+    settings:
+      base:
+        PRODUCT_NAME: WatchApp
+        PRODUCT_BUNDLE_IDENTIFIER: com.brx.WatchApp
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        SWIFT_VERSION: "5.9"
+        CODE_SIGN_STYLE: Automatic

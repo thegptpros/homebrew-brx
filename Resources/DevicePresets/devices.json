@@ -1,0 +1,31 @@
+{
+  "ios": [
+    {
+      "name": "iPhone 17 Pro Max",
+      "identifier": "com.apple.CoreSimulator.SimDeviceType.iPhone-17-Pro-Max",
+      "screen_size": "6.9 inch",
+      "resolution": "2868x1320"
+    },
+    {
+      "name": "iPhone 17 Pro",
+      "identifier": "com.apple.CoreSimulator.SimDeviceType.iPhone-17-Pro",
+      "screen_size": "6.3 inch",
+      "resolution": "2622x1206"
+    }
+  ],
+  "watchos": [
+    {
+      "name": "Apple Watch Ultra 2 (49mm)",
+      "identifier": "com.apple.CoreSimulator.SimDeviceType.Apple-Watch-Ultra-2-49mm",
+      "screen_size": "1.92 inch",
+      "resolution": "410x502"
+    },
+    {
+      "name": "Apple Watch Series 10 (46mm)",
+      "identifier": "com.apple.CoreSimulator.SimDeviceType.Apple-Watch-Series-10-46mm",
+      "screen_size": "1.78 inch",
+      "resolution": "396x484"
+    }
+  ]
+}
+

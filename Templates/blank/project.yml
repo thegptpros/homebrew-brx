@@ -1,0 +1,22 @@
+name: {{NAME}}
+options:
+  bundleIdPrefix: {{BUNDLE_ID}}
+  deploymentTarget:
+    iOS: 17.0
+targets:
+  {{NAME}}:
+    type: application
+    platform: iOS
+    sources:
+      - Sources
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: {{BUNDLE_ID}}
+      INFOPLIST_FILE: Sources/Info.plist
+schemes:
+  {{NAME}}:
+    build:
+      targets:
+        {{NAME}}: all
+    run:
+      config: Debug
+

@@ -1,0 +1,26 @@
+name: BRXDemo
+options:
+  bundleIdPrefix: dev.brx
+  deploymentTarget:
+    iOS: 17.0
+
+targets:
+  BRXDemo:
+    type: application
+    platform: iOS
+    bundleIdPrefix: ""
+    bundleId: dev.brx.demo
+    sources:
+      - Sources
+    resources:
+      - Resources
+    settings:
+      base:
+        CODE_SIGN_IDENTITY: ""
+        CODE_SIGNING_REQUIRED: NO
+        CODE_SIGNING_ALLOWED: NO
+    info:
+      path: BRXDemo-Info.plist
+      properties:
+        CFBundleShortVersionString: "1.0"
+        CFBundleVersion: "1"

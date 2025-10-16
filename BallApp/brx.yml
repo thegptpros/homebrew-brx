@@ -1,0 +1,11 @@
+name: BallApp
+bundle_id_prefix: com.brx
+targets:
+- name: BallApp
+  platform: iOS
+  deployment_target: '17.0'
+  sources:
+  - Sources/**/*.swift
+  resources:
+  - Resources/**
+  dependencies: []
