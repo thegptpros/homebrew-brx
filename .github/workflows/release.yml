@@ -8,6 +8,8 @@ on:
 jobs:
   build:
     runs-on: macos-14
+    permissions:
+      contents: write
     
     steps:
       - uses: actions/checkout@v4
@@ -25,9 +27,14 @@ jobs:
           cd .build/release
           # Remove 'v' prefix from version for filename
           VERSION=${GITHUB_REF_NAME#v}
+          echo "Creating archive: brx-$VERSION-macos.tar.gz"
+          ls -la
           tar -czf brx-$VERSION-macos.tar.gz BRX
+          ls -la
           mv brx-$VERSION-macos.tar.gz ../../
           echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Archive created, checking root directory:"
+          ls -la ../../
       
       - name: Create Release
         uses: softprops/action-gh-release@v1
