@@ -23,13 +23,16 @@ jobs:
       - name: Create Archive
         run: |
           cd .build/release
-          tar -czf brx-${{ github.ref_name }}-macos.tar.gz BRX
-          mv brx-${{ github.ref_name }}-macos.tar.gz ../../
+          # Remove 'v' prefix from version for filename
+          VERSION=${GITHUB_REF_NAME#v}
+          tar -czf brx-$VERSION-macos.tar.gz BRX
+          mv brx-$VERSION-macos.tar.gz ../../
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
       
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          files: brx-${{ github.ref_name }}-macos.tar.gz
+          files: brx-${{ env.VERSION }}-macos.tar.gz
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
