@@ -62,11 +62,57 @@ enum License {
             throw LicenseError.notActivated
         }
     }
+    
+    // Check if user can build (licensed or within free build limit)
+    static func canBuild() -> (allowed: Bool, buildsRemaining: Int) {
+        // If licensed, unlimited builds
+        if isActivated {
+            return (true, -1) // -1 indicates unlimited
+        }
+        
+        // Check free build limit
+        let config = BRXConfig.load()
+        let remaining = max(0, 10 - config.buildCount)
+        
+        return (remaining > 0, remaining)
+    }
+    
+    // Increment build count for free users
+    static func incrementBuildCount() {
+        guard !isActivated else {
+            return // Don't track builds for licensed users
+        }
+        
+        var config = BRXConfig.load()
+        config.buildCount += 1
+        
+        do {
+            try config.save()
+        } catch {
+            Logger.warning("Failed to update build count: \(error)")
+        }
+    }
+    
+    // Show message after successful build
+    static func showBuildLimitMessage() {
+        guard !isActivated else {
+            return // Don't show message to licensed users
+        }
+        
+        let config = BRXConfig.load()
+        let remaining = max(0, 10 - config.buildCount)
+        
+        if remaining > 0 {
+            print("\n\(Theme.current.muted)Free builds remaining: \(remaining)/10\(Ansi.reset)")
+            print("\(Theme.current.muted)Get unlimited builds at: \(Theme.current.primary)https://brx.dev\(Ansi.reset)\n")
+        }
+    }
 }
 
 enum LicenseError: Error, CustomStringConvertible {
     case notActivated
     case invalidKey
+    case buildLimitReached
     case custom(String)
     
     var description: String {
@@ -81,6 +127,19 @@ enum LicenseError: Error, CustomStringConvertible {
               \(Theme.current.primary)brx activate --license-key <your-key>\(Ansi.reset)
             
             Purchase a license at: \(Theme.current.primary)https://brx.dev\(Ansi.reset)
+            
+            """
+        case .buildLimitReached:
+            return """
+            
+            \(Theme.current.error)Free build limit reached (10/10)\(Ansi.reset)
+            
+            You've used all your free builds! To continue building:
+            
+              1. Get a license at: \(Theme.current.primary)https://brx.dev\(Ansi.reset)
+              2. Activate it: \(Theme.current.primary)brx activate --license-key <your-key>\(Ansi.reset)
+            
+            \(Theme.current.muted)Licenses start at $39/year or $79 lifetime\(Ansi.reset)
             
             """
         case .invalidKey:

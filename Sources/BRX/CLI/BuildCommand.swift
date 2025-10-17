@@ -26,8 +26,11 @@ struct BuildCommand: AsyncParsableCommand {
         Signature.start()
         defer { Signature.stopBlink() }
         
-        // Require license
-        try License.requireLicense()
+        // Check build limit (allows 10 free builds or unlimited with license)
+        let (canBuild, _) = License.canBuild()
+        guard canBuild else {
+            throw LicenseError.buildLimitReached
+        }
         
         Telemetry.trackCommand("build")
         
@@ -39,6 +42,10 @@ struct BuildCommand: AsyncParsableCommand {
             // Create new project from template
             try await createAndBuildProject()
         }
+        
+        // Increment build count and show remaining builds (only for free users)
+        License.incrementBuildCount()
+        License.showBuildLimitMessage()
     }
     
     private func buildExistingProject() async throws {

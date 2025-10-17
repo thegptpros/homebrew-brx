@@ -20,10 +20,16 @@ struct RunCommand: AsyncParsableCommand {
         Signature.start()
         defer { Signature.stopBlink() }
         
-        // Require license
-        try License.requireLicense()
+        // Check build limit (allows 10 free builds or unlimited with license)
+        let (canBuild, _) = License.canBuild()
+        guard canBuild else {
+            throw LicenseError.buildLimitReached
+        }
         
         Telemetry.trackCommand("run")
+        
+        // Increment build count immediately (before potentially long build)
+        License.incrementBuildCount()
         
         // Load project spec
         let spec = try ProjectSpec.load()
@@ -60,6 +66,9 @@ struct RunCommand: AsyncParsableCommand {
         
         Logger.success("running \"\(spec.name)\" on \(targetDevice) (ios \(osVersion)) — pid \(pid)")
         Terminal.writeLine("")
+        
+        // Show build limit message (only for free users)
+        License.showBuildLimitMessage()
         
         // Start watching for changes unless --no-watch is specified
         if !noWatch {

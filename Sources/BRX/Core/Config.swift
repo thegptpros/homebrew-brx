@@ -41,6 +41,7 @@ struct BRXConfig: Codable {
     var telemetry: Bool
     var fastlane: Fastlane
     var license: LicenseInfo
+    var buildCount: Int
     
     enum CodingKeys: String, CodingKey {
         case defaults
@@ -49,6 +50,7 @@ struct BRXConfig: Codable {
         case telemetry
         case fastlane
         case license
+        case buildCount = "build_count"
     }
     
     static let defaultConfig = BRXConfig(
@@ -68,7 +70,8 @@ struct BRXConfig: Codable {
         license: LicenseInfo(
             key: "",
             activatedAt: ""
-        )
+        ),
+        buildCount: 0
     )
     
     static var configPath: String {
