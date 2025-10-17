@@ -1,22 +1,13 @@
 name: FinalTest
 options:
-  bundleIdPrefix: com.brx
+  bundleIdentifierPrefix: com.brx.finaltest
 targets:
   FinalTest:
     type: application
     platform: iOS
-    deploymentTarget: "17.0"
     sources:
       - Sources
     resources:
       - Resources
     settings:
-      base:
-        PRODUCT_NAME: FinalTest
-        PRODUCT_BUNDLE_IDENTIFIER: com.brx.FinalTest
-        GENERATE_INFOPLIST_FILE: YES
-        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
-        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
-        INFOPLIST_KEY_UILaunchScreen_Generation: YES
-        SWIFT_VERSION: "5.9"
-        CODE_SIGN_STYLE: Automatic
+      PRODUCT_BUNDLE_IDENTIFIER: com.brx.finaltest

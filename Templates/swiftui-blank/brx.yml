@@ -1,0 +1,7 @@
+name: {{PROJECT_NAME}}
+bundle_id: com.brx.{{PROJECT_NAME_LOWER}}
+project: {{PROJECT_NAME}}.xcodeproj
+scheme: {{PROJECT_NAME}}
+target: {{PROJECT_NAME}}
+platform: iOS
+deployment_target: "17.0"

@@ -2,19 +2,29 @@ import Foundation
 
 enum ProjectGen {
     static func generate(spec: ProjectSpec) throws {
-        if let generator = spec.generator, generator.lowercased() == "xcodegen" {
-            try generateWithXcodeGen()
+        // Check if project.yml exists (XcodeGen spec)
+        if FS.exists("project.yml") {
+            try generateWithXcodeGen(specFile: "project.yml")
+        } else if let generator = spec.generator, generator.lowercased() == "xcodegen" {
+            try generateWithXcodeGen(specFile: "brx.yml")
         } else {
             try generateMinimalProject(spec: spec)
         }
     }
     
-    private static func generateWithXcodeGen() throws {
-        guard Shell.which("xcodegen") != nil else {
+    private static func generateWithXcodeGen(specFile: String) throws {
+        // Try to find xcodegen in common paths
+        let xcodegenPaths = [
+            "/opt/homebrew/bin/xcodegen",
+            "/usr/local/bin/xcodegen",
+            Shell.which("xcodegen") ?? ""
+        ]
+        
+        guard let xcodegenPath = xcodegenPaths.first(where: { FS.exists($0) }) else {
             throw ProjectGenError.xcodegenNotFound
         }
         
-        let result = try Shell.run("/usr/bin/xcodegen", args: ["generate", "--spec", "brx.yml"])
+        let result = try Shell.run(xcodegenPath, args: ["generate", "--spec", specFile])
         
         guard result.success else {
             throw ProjectGenError.generationFailed(result.stderr)

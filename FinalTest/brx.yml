@@ -1,11 +1,4 @@
 name: FinalTest
-bundle_id_prefix: com.brx
-targets:
-- name: FinalTest
-  platform: iOS
-  deployment_target: '17.0'
-  sources:
-  - Sources/**/*.swift
-  resources:
-  - Resources/**
-  dependencies: []
+bundle_id: com.brx.finaltest
+project: FinalTest.xcodeproj
+scheme: FinalTest

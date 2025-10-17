@@ -8,7 +8,7 @@ struct BuildCommand: AsyncParsableCommand {
     )
     
     @Option(name: .shortAndLong, help: "Template name")
-    var template: String = "swiftui-todo"
+    var template: String = "swiftui-blank"
     
     @Option(name: .shortAndLong, help: "Project name")
     var name: String?
@@ -92,6 +92,7 @@ struct BuildCommand: AsyncParsableCommand {
         let bundleIdentifier = bundleId ?? "com.brx.\(projectName.lowercased())"
         try updateBRXYML(at: "\(projectPath)/brx.yml", name: projectName, bundleId: bundleIdentifier)
         try updateProjectYML(at: "\(projectPath)/project.yml", name: projectName, bundleId: bundleIdentifier)
+        try replaceTemplateVariables(in: projectPath, name: projectName)
         
         // Generate project automatically
         let originalDir = FS.currentDirectory()
@@ -104,11 +105,15 @@ struct BuildCommand: AsyncParsableCommand {
         // Build the project automatically
         Logger.step("🔨", "building project")
         let config = BRXConfig.load()
+        let targetDevice = config.defaults.iosDevice
+        let udid = try Simulator.ensureDevice(named: targetDevice, platform: .iOS)
+        let destination = "platform=iOS Simulator,id=\(udid)"
+        
         _ = try XcodeTools.build(
             project: spec.project ?? "\(spec.name).xcodeproj",
             scheme: spec.scheme ?? spec.name,
             configuration: configuration,
-            destination: config.defaults.iosDevice
+            destination: destination
         )
         
         FileManager.default.changeCurrentDirectoryPath(originalDir)
@@ -121,8 +126,12 @@ struct BuildCommand: AsyncParsableCommand {
     private func findTemplate(_ name: String) throws -> String {
         // Try multiple paths to find templates
         let searchPaths = [
+            // Templates bundled with executable (for releases)
+            "\(ProcessInfo.processInfo.arguments[0])/Templates/\(name)",
             // Local Templates directory (for development)
             "./Templates/\(name)",
+            // User directory (for local installs)
+            "~/.local/share/brx/Templates/\(name)",
             // Relative to executable (for installed brx)
             "\(ProcessInfo.processInfo.arguments[0])/../Templates/\(name)",
             // Source directory (for development builds)
@@ -172,22 +181,37 @@ struct BuildCommand: AsyncParsableCommand {
     }
     
     private func updateProjectYML(at path: String, name: String, bundleId: String) throws {
-        let content = """
-        name: \(name)
-        options:
-          bundleIdentifierPrefix: \(bundleId)
-        targets:
-          \(name):
-            type: application
-            platform: iOS
-            sources:
-              - Sources
-            resources:
-              - Resources
-            settings:
-              PRODUCT_BUNDLE_IDENTIFIER: \(bundleId)
-        """
-        try FS.writeFile(path, contents: content)
+        // Read the template file and replace placeholders
+        guard let content = try? FS.readFile(path) else {
+            throw BuildError.templateNotFound("project.yml")
+        }
+        
+        let nameLower = name.lowercased()
+        let bundlePrefix = bundleId.components(separatedBy: ".\(nameLower)").first ?? "com.brx"
+        
+        let updated = content
+            .replacingOccurrences(of: "{{PROJECT_NAME}}", with: name)
+            .replacingOccurrences(of: "{{PROJECT_NAME_LOWER}}", with: nameLower)
+            .replacingOccurrences(of: "com.brx", with: bundlePrefix)
+        
+        try FS.writeFile(path, contents: updated)
+    }
+    
+    private func replaceTemplateVariables(in projectPath: String, name: String) throws {
+        // Replace {{PROJECT_NAME}} in all Swift files
+        let sourcesPath = "\(projectPath)/Sources"
+        if FS.exists(sourcesPath) {
+            let files = try FS.listDirectory(sourcesPath)
+            for file in files {
+                if file.hasSuffix(".swift") {
+                    let filePath = "\(sourcesPath)/\(file)"
+                    if let content = try? FS.readFile(filePath) {
+                        let updated = content.replacingOccurrences(of: "{{PROJECT_NAME}}", with: name)
+                        try FS.writeFile(filePath, contents: updated)
+                    }
+                }
+            }
+        }
     }
 }
 

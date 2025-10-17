@@ -24,17 +24,26 @@ jobs:
       
       - name: Create Archive
         run: |
-          cd .build/release
           # Remove 'v' prefix from version for filename
           VERSION=${GITHUB_REF_NAME#v}
           echo "Creating archive: brx-$VERSION-macos.tar.gz"
-          ls -la
-          tar -czf brx-$VERSION-macos.tar.gz BRX
-          ls -la
-          mv brx-$VERSION-macos.tar.gz ../../
+          
+          # Create a temporary directory for packaging
+          mkdir -p brx-package
+          
+          # Copy binary
+          cp .build/release/BRX brx-package/brx
+          chmod +x brx-package/brx
+          
+          # Copy templates
+          cp -r Templates brx-package/
+          
+          # Create tarball from package directory
+          tar -czf brx-$VERSION-macos.tar.gz -C brx-package .
+          
           echo "VERSION=$VERSION" >> $GITHUB_ENV
-          echo "Archive created, checking root directory:"
-          ls -la ../../
+          echo "Archive created with contents:"
+          tar -tzf brx-$VERSION-macos.tar.gz | head -20
       
       - name: Create Release
         uses: softprops/action-gh-release@v1
