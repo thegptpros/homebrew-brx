@@ -70,9 +70,9 @@ enum License {
             return (true, -1) // -1 indicates unlimited
         }
         
-        // Check free build limit
+        // Check free build limit (3 free builds)
         let config = BRXConfig.load()
-        let remaining = max(0, 10 - config.buildCount)
+        let remaining = max(0, 3 - config.buildCount)
         
         return (remaining > 0, remaining)
     }
@@ -100,10 +100,10 @@ enum License {
         }
         
         let config = BRXConfig.load()
-        let remaining = max(0, 10 - config.buildCount)
+        let remaining = max(0, 3 - config.buildCount)
         
         if remaining > 0 {
-            print("\n\(Theme.current.muted)Free builds remaining: \(remaining)/10\(Ansi.reset)")
+            print("\n\(Theme.current.muted)Free builds remaining: \(remaining)/3\(Ansi.reset)")
             print("\(Theme.current.muted)Get unlimited builds at: \(Theme.current.primary)https://brx.dev\(Ansi.reset)\n")
         }
     }
@@ -132,7 +132,7 @@ enum LicenseError: Error, CustomStringConvertible {
         case .buildLimitReached:
             return """
             
-            \(Theme.current.error)Free build limit reached (10/10)\(Ansi.reset)
+            \(Theme.current.error)Free build limit reached (3/3)\(Ansi.reset)
             
             You've used all your free builds! To continue building:
             

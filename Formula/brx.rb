@@ -1,9 +1,9 @@
 class Brx < Formula
   desc "Build, run, and ship iOS apps from your terminal"
   homepage "https://brx.dev"
-  url "https://github.com/thegptpros/homebrew-brx/releases/download/v3.0.0/brx-3.0.0-macos.tar.gz"
-  sha256 "125eddb9beb161ef28bfb110db6a794751b5a977699b1c18f3732b88dd106bc1"
-  version "3.0.0"
+  url "https://github.com/thegptpros/homebrew-brx/releases/download/v3.1.0/brx-3.1.0-macos.tar.gz"
+  sha256 "457599c494d64a0d6d55368d58af7fb8cb06ab5f7169a85f50e8fa2c2861710f"
+  version "3.1.0"
   license "Proprietary"
 
   # Requires macOS and Xcode
@@ -24,14 +24,16 @@ class Brx < Formula
     <<~EOS
       ◻︎ brx — build. run. ship. ios. from terminal.
 
-      BRX requires a valid license to use.
+      Try BRX FREE with 3 builds, then activate for unlimited:
       
       Get started:
-        brx activate --license-key <YOUR-KEY>
         brx build --name MyApp
         brx run
+      
+      After 3 free builds, activate for unlimited:
+        brx activate --license-key <YOUR-KEY>
 
-      Purchase a license at: https://brx.dev
+      Get a license at: https://brx.dev
       Documentation: https://brx.dev/docs
       
       Templates installed to:
