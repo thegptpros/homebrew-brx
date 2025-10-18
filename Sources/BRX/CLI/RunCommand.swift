@@ -123,6 +123,12 @@ struct RunCommand: AsyncParsableCommand {
     }
     
     private func fullRebuild(spec: ProjectSpec, config: BRXConfig, udid: String, destination: String) async throws {
+        // Auto-regenerate project if project.yml exists (for new files/directories)
+        if FS.exists("project.yml") {
+            Logger.step("🔄", "regenerating project for new files")
+            try ProjectGen.generate(spec: spec)
+        }
+        
         // Build
         let projectPath = spec.project ?? "\(spec.name).xcodeproj"
         let scheme = spec.scheme ?? spec.name
