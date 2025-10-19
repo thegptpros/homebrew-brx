@@ -21,18 +21,39 @@ enum XcodeTools {
         
         // Add code signing parameters for physical devices
         let isPhysicalDevice = !destination.contains("Simulator")
-        var needsSigningSetup = false
         
         if isPhysicalDevice {
+            // Always use explicit signing parameters for physical devices
             if let team = try? CodeSigning.selectDevelopmentTeam() {
                 Logger.step("🔐", "using development team: \(team.email)")
                 args.append(contentsOf: [
+                    "CODE_SIGNING_ALLOWED=YES",
+                    "CODE_SIGNING_REQUIRED=YES", 
                     "CODE_SIGN_IDENTITY=Apple Development",
                     "DEVELOPMENT_TEAM=\(team.id)",
                     "-allowProvisioningUpdates"
                 ])
             } else {
-                needsSigningSetup = true
+                // No development team found - guide user through setup
+                Logger.step("📱", "physical device deployment requires code signing")
+                Terminal.writeLine("")
+                Terminal.writeLine("  \(Theme.current.primary)Setting up code signing...\(Ansi.reset)")
+                Terminal.writeLine("")
+                
+                // Open Xcode and guide the user through setup
+                try CodeSigning.setupSigningInteractive(projectPath: project)
+                
+                // Retry with signing after user setup
+                Logger.step("🔨", "rebuilding with configured signing...")
+                if let team = try? CodeSigning.selectDevelopmentTeam() {
+                    args.append(contentsOf: [
+                        "CODE_SIGNING_ALLOWED=YES",
+                        "CODE_SIGNING_REQUIRED=YES",
+                        "CODE_SIGN_IDENTITY=Apple Development", 
+                        "DEVELOPMENT_TEAM=\(team.id)",
+                        "-allowProvisioningUpdates"
+                    ])
+                }
             }
         }
         
@@ -40,15 +61,22 @@ enum XcodeTools {
         
         let result = try Shell.run("/usr/bin/xcodebuild", args: args, timeout: 300)
         
-        // Check if build failed due to provisioning issues
+        // Check if build failed due to signing issues
         if !result.success {
             let errorOutput = result.stderr.lowercased()
-            let isProvisioningError = errorOutput.contains("no profiles") || 
-                                     errorOutput.contains("no account for team") ||
-                                     errorOutput.contains("provisioning profile") ||
-                                     needsSigningSetup
+            let isSigningError = errorOutput.contains("no profiles") || 
+                                errorOutput.contains("no account for team") ||
+                                errorOutput.contains("provisioning profile") ||
+                                errorOutput.contains("code signing") ||
+                                errorOutput.contains("not codesigned")
             
-            if isProvisioningError && isPhysicalDevice {
+            if isSigningError && isPhysicalDevice {
+                Logger.step("🔧", "signing issue detected - opening Xcode for setup")
+                Terminal.writeLine("")
+                Terminal.writeLine("  \(Theme.current.warning)⚠️  Code signing setup required\(Ansi.reset)")
+                Terminal.writeLine("  \(Theme.current.muted)→ This is a one-time setup per project\(Ansi.reset)")
+                Terminal.writeLine("")
+                
                 // Open Xcode and guide the user through setup
                 try CodeSigning.setupSigningInteractive(projectPath: project)
                 

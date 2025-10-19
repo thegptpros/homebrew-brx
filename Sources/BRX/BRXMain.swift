@@ -6,7 +6,7 @@ struct BRX: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "brx",
         abstract: "Build, run, and ship iOS apps from your terminal.",
-        version: "3.1.6",
+        version: "3.1.7",
         subcommands: [
             BuildCommand.self,
             RunCommand.self,
@@ -55,6 +55,52 @@ struct BRX: AsyncParsableCommand {
                 Terminal.writeLine("  \(Theme.current.error)✗\(Ansi.reset) License: \(Theme.current.error)Required\(Ansi.reset) • \(Theme.current.error)0 builds remaining\(Ansi.reset)")
             }
         }
+        
+        // Show available devices
+        Terminal.writeLine("")
+        Terminal.writeLine("  \(Theme.current.primary)Devices Available:\(Ansi.reset)")
+        Terminal.writeLine("")
+        
+        // Show connected physical devices first
+        do {
+            let physicalDevices = try DeviceCtl.listPhysicalDevices()
+            if !physicalDevices.isEmpty {
+                Terminal.writeLine("  \(Theme.current.success)📱 Connected:\(Ansi.reset)")
+                for device in physicalDevices {
+                    Terminal.writeLine("    • \(Theme.current.primary)\(device.name)\(Ansi.reset)")
+                }
+                Terminal.writeLine("")
+            }
+        } catch {
+            // Silently skip if no physical devices or devicectl unavailable
+        }
+        
+        // Show default simulator
+        do {
+            let result = try Shell.run("/usr/bin/xcrun", args: ["simctl", "list", "devices", "--json"])
+            if result.success, let data = result.stdout.data(using: .utf8),
+               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let devicesDict = json["devices"] as? [String: [[String: Any]]] {
+                
+                // Find iPhone 17 Pro Max or first available iOS device
+                for (runtimeKey, devices) in devicesDict where runtimeKey.contains("iOS") {
+                    for device in devices {
+                        if let name = device["name"] as? String,
+                           let state = device["state"] as? String,
+                           state == "Booted" || name.contains("iPhone 17 Pro Max") {
+                            Terminal.writeLine("  \(Theme.current.muted)📲 Default Simulator:\(Ansi.reset)")
+                            Terminal.writeLine("    • \(Theme.current.primary)\(name)\(Ansi.reset)")
+                            Terminal.writeLine("")
+                            break
+                        }
+                    }
+                    break
+                }
+            }
+        } catch {
+            // Silently skip if can't list simulators
+        }
+        
         Terminal.writeLine("")
         Terminal.writeLine("\(Theme.current.primary)Build\(Ansi.reset)")
         Terminal.writeLine("")

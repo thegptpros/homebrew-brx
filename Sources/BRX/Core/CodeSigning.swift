@@ -92,18 +92,21 @@ enum CodeSigning {
         // Give Xcode time to open
         Thread.sleep(forTimeInterval: 2.0)
         
-        // Show instructions
+        // Show clear, step-by-step instructions
         Terminal.writeLine("\(Theme.current.success)✓\(Ansi.reset) Xcode opened with your project")
         Terminal.writeLine("")
-        Terminal.writeLine("\(Theme.current.primary)Quick Setup:\(Ansi.reset)")
+        Terminal.writeLine("\(Theme.current.primary)🔧 Code Signing Setup (2 minutes):\(Ansi.reset)")
         Terminal.writeLine("")
-        Terminal.writeLine("  1. \(Theme.current.primary)Select your project\(Ansi.reset) (top of left sidebar)")
-        Terminal.writeLine("  2. \(Theme.current.primary)Select the target\(Ansi.reset) (under project name)")
-        Terminal.writeLine("  3. Go to \(Theme.current.primary)\"Signing & Capabilities\"\(Ansi.reset) tab")
-        Terminal.writeLine("  4. Check \(Theme.current.primary)\"Automatically manage signing\"\(Ansi.reset)")
-        Terminal.writeLine("  5. \(Theme.current.primary)Select your Apple ID team\(Ansi.reset) from dropdown")
+        Terminal.writeLine("  \(Theme.current.primary)Step 1:\(Ansi.reset) Click your project name (top of left sidebar)")
+        Terminal.writeLine("  \(Theme.current.primary)Step 2:\(Ansi.reset) Click the target name (under project)")
+        Terminal.writeLine("  \(Theme.current.primary)Step 3:\(Ansi.reset) Click \"Signing & Capabilities\" tab")
+        Terminal.writeLine("  \(Theme.current.primary)Step 4:\(Ansi.reset) Check \"Automatically manage signing\"")
+        Terminal.writeLine("  \(Theme.current.primary)Step 5:\(Ansi.reset) Select your Apple ID team from dropdown")
         Terminal.writeLine("")
-        Terminal.writeLine("\(Theme.current.muted)No Apple ID?\(Ansi.reset) Go to Xcode → Settings → Accounts → Add (+)")
+        Terminal.writeLine("\(Theme.current.muted)💡 No Apple ID?\(Ansi.reset) Xcode → Settings → Accounts → Add (+)")
+        Terminal.writeLine("\(Theme.current.muted)💡 Don't see your team?\(Ansi.reset) Make sure you're signed into Xcode")
+        Terminal.writeLine("")
+        Terminal.writeLine("\(Theme.current.success)When you see \"Xcode Managed Profile\" and a certificate, you're done!\(Ansi.reset)")
         Terminal.writeLine("")
         Terminal.writeLine("Press \(Theme.current.primary)Enter\(Ansi.reset) when signing is configured...")
         
@@ -111,7 +114,7 @@ enum CodeSigning {
         _ = readLine()
         
         Terminal.writeLine("")
-        Terminal.writeLine("\(Theme.current.success)✓\(Ansi.reset) Great! Continuing build...")
+        Terminal.writeLine("\(Theme.current.success)✓\(Ansi.reset) Perfect! Building your app...")
         Terminal.writeLine("")
     }
 }
