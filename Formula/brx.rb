@@ -1,9 +1,9 @@
 class Brx < Formula
   desc "Build, run, and ship iOS apps from your terminal"
   homepage "https://brx.dev"
-  url "https://github.com/thegptpros/homebrew-brx/releases/download/v3.1.6/brx-3.1.6-macos.tar.gz"
-  sha256 "737412bcaf15e00ee0cb86bdcdeb30d8e103f10e2276ae2894d455d3d0813f3d"
-  version "3.1.6"
+  url "https://github.com/thegptpros/homebrew-brx/releases/download/v3.1.7/brx-3.1.7-macos.tar.gz"
+  sha256 "ee0b9904b553486c3eeb7b4e8fa60b4d4bfab7d1a989be33f848c1adddff839d"
+  version "3.1.7"
   license "Proprietary"
 
   # Requires macOS and Xcode
@@ -12,7 +12,7 @@ class Brx < Formula
 
   def install
     # Install the main binary
-    bin.install "BRX" => "brx"
+    bin.install "brx"
     
     # Install templates to share directory
     if Dir.exist?("Templates")
