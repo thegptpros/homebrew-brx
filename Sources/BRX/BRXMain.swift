@@ -6,7 +6,7 @@ struct BRX: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "brx",
         abstract: "Build, run, and ship iOS apps from your terminal.",
-        version: "3.1.4",
+        version: "3.1.6",
         subcommands: [
             BuildCommand.self,
             RunCommand.self,
@@ -16,7 +16,8 @@ struct BRX: AsyncParsableCommand {
             DoctorCommand.self,
             ShipCommand.self,
             PublishCommand.self,
-            ActivateCommand.self
+            ActivateCommand.self,
+            StatusCommand.self
         ]
     )
     
@@ -41,6 +42,19 @@ struct BRX: AsyncParsableCommand {
         Terminal.write(String(repeating: " ", count: padding))
         Terminal.writeLine(logo)
         Terminal.writeLine(String(repeating: "─", count: width))
+        
+        // Show license status
+        let (_, buildsRemaining) = License.canBuild()
+        Terminal.writeLine("")
+        if License.isActivated {
+            Terminal.writeLine("  \(Theme.current.success)✓\(Ansi.reset) License: \(Theme.current.success)Active\(Ansi.reset) • \(Theme.current.success)Unlimited builds\(Ansi.reset)")
+        } else {
+            if buildsRemaining > 0 {
+                Terminal.writeLine("  \(Theme.current.muted)○\(Ansi.reset) License: \(Theme.current.muted)Free\(Ansi.reset) • \(Theme.current.primary)\(buildsRemaining)\(Ansi.reset)\(Theme.current.muted) build\(buildsRemaining == 1 ? "" : "s") remaining\(Ansi.reset)")
+            } else {
+                Terminal.writeLine("  \(Theme.current.error)✗\(Ansi.reset) License: \(Theme.current.error)Required\(Ansi.reset) • \(Theme.current.error)0 builds remaining\(Ansi.reset)")
+            }
+        }
         Terminal.writeLine("")
         Terminal.writeLine("\(Theme.current.primary)Build\(Ansi.reset)")
         Terminal.writeLine("")
@@ -54,6 +68,7 @@ struct BRX: AsyncParsableCommand {
         Terminal.writeLine("")
         Terminal.writeLine("\(Theme.current.primary)BRX Settings\(Ansi.reset)")
         Terminal.writeLine("")
+        Terminal.writeLine("  📊 \(Theme.current.primary)status\(Ansi.reset)   \(Theme.current.muted)- show license status & build count\(Ansi.reset)")
         Terminal.writeLine("  ⚙️  \(Theme.current.primary)settings\(Ansi.reset) \(Theme.current.muted)- configure defaults & preferences\(Ansi.reset)")
         Terminal.writeLine("  📱 \(Theme.current.primary)devices\(Ansi.reset)  \(Theme.current.muted)- list/manage simulators & devices\(Ansi.reset)")
         Terminal.writeLine("  🔍 \(Theme.current.primary)doctor\(Ansi.reset)   \(Theme.current.muted)- check environment & dependencies\(Ansi.reset)")

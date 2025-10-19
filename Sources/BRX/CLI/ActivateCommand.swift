@@ -81,11 +81,13 @@ struct ActivateCommand: AsyncParsableCommand {
                 Logger.success("license already activated")
                 Terminal.writeLine("")
                 Terminal.writeLine("  \(Theme.current.success)✓\(Ansi.reset) Your license is active")
+                Terminal.writeLine("  \(Theme.current.muted)→ Check status: \(Theme.current.primary)brx status\(Ansi.reset)")
             } else {
                 Logger.step("ℹ️", "please provide a license key")
                 Terminal.writeLine("")
                 Terminal.writeLine("  \(Theme.current.muted)→ Usage: brx activate --license-key <your-key>\(Ansi.reset)")
                 Terminal.writeLine("  \(Theme.current.muted)→ Purchase at: \(Theme.current.primary)https://brx.dev\(Ansi.reset)")
+                Terminal.writeLine("  \(Theme.current.muted)→ Check status: \(Theme.current.primary)brx status\(Ansi.reset)")
             }
         }
         

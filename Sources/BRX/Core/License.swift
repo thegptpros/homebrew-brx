@@ -103,8 +103,11 @@ enum License {
         let remaining = max(0, 3 - config.buildCount)
         
         if remaining > 0 {
-            print("\n\(Theme.current.muted)Free builds remaining: \(remaining)/3\(Ansi.reset)")
-            print("\(Theme.current.muted)Get unlimited builds at: \(Theme.current.primary)https://brx.dev\(Ansi.reset)\n")
+            Terminal.writeLine("")
+            Terminal.writeLine("\(Theme.current.muted)Free builds remaining: \(Theme.current.primary)\(remaining)\(Theme.current.muted)/3\(Ansi.reset)")
+            Terminal.writeLine("\(Theme.current.muted)Get unlimited builds: \(Theme.current.primary)https://brx.dev\(Ansi.reset)")
+            Terminal.writeLine("\(Theme.current.muted)Check status: \(Theme.current.primary)brx status\(Ansi.reset)")
+            Terminal.writeLine("")
         }
     }
 }
@@ -140,6 +143,7 @@ enum LicenseError: Error, CustomStringConvertible {
               2. Activate it: \(Theme.current.primary)brx activate --license-key <your-key>\(Ansi.reset)
             
             \(Theme.current.muted)Licenses start at $39/year or $79 lifetime\(Ansi.reset)
+            \(Theme.current.muted)Check your status: \(Theme.current.primary)brx status\(Ansi.reset)
             
             """
         case .invalidKey:
