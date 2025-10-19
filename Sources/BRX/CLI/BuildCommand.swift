@@ -160,15 +160,32 @@ struct BuildCommand: AsyncParsableCommand {
         
         try FS.createDirectory(destination)
         
-        let files = try FS.listDirectory(source)
+        // Get all files including hidden ones
+        let fileManager = FileManager.default
+        let files = try fileManager.contentsOfDirectory(atPath: source)
+        
         for file in files {
-            if file.hasPrefix(".") { continue }
+            // Skip hidden files except for Cursor/VS Code integration files
+            if file.hasPrefix(".") && !shouldIncludeHiddenFile(file) { 
+                continue 
+            }
             
             let sourcePath = "\(source)/\(file)"
             let destPath = "\(destination)/\(file)"
             
             try FS.copyItem(from: sourcePath, to: destPath)
         }
+    }
+    
+    private func shouldIncludeHiddenFile(_ file: String) -> Bool {
+        // Include Cursor/VS Code integration files
+        let allowedHiddenFiles = [
+            ".cursorrules",
+            ".cursorignore",
+            ".vscode"
+        ]
+        
+        return allowedHiddenFiles.contains(file)
     }
     
     private func updateBRXYML(at path: String, name: String, bundleId: String) throws {
@@ -211,6 +228,33 @@ struct BuildCommand: AsyncParsableCommand {
                         try FS.writeFile(filePath, contents: updated)
                     }
                 }
+            }
+        }
+        
+        // Replace template variables in Cursor/VS Code files
+        try replaceTemplateVariablesInCursorFiles(projectPath: projectPath, name: name)
+    }
+    
+    private func replaceTemplateVariablesInCursorFiles(projectPath: String, name: String) throws {
+        // Update .vscode/launch.json files
+        let launchJsonPath = "\(projectPath)/.vscode/launch.json"
+        if FS.exists(launchJsonPath) {
+            if let content = try? FS.readFile(launchJsonPath) {
+                let updated = content
+                    .replacingOccurrences(of: "{{NAME}}", with: name)
+                    .replacingOccurrences(of: "{{PROJECT_NAME}}", with: name)
+                try FS.writeFile(launchJsonPath, contents: updated)
+            }
+        }
+        
+        // Update README.md files
+        let readmePath = "\(projectPath)/README.md"
+        if FS.exists(readmePath) {
+            if let content = try? FS.readFile(readmePath) {
+                let updated = content
+                    .replacingOccurrences(of: "{{NAME}}", with: name)
+                    .replacingOccurrences(of: "{{PROJECT_NAME}}", with: name)
+                try FS.writeFile(readmePath, contents: updated)
             }
         }
     }
