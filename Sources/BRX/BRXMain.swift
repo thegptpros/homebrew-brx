@@ -36,7 +36,8 @@ struct BRX: AsyncParsableCommand {
         Terminal.writeLine("\(Theme.current.primary)░██░█████  ░██      ░██    ░██ ░██████████  \(Ansi.reset)")
         Terminal.writeLine("")
         let width = Terminal.width
-        let logo = "◻︎ brx — build. run. ship. ios. from terminal."
+        let version = Self.configuration.version
+        let logo = "◻︎ brx — build. run. ship. ios. from terminal. v\(version)"
         let padding = max(0, (width - logo.count) / 2)
         Terminal.writeLine(String(repeating: "─", count: width))
         Terminal.write(String(repeating: " ", count: padding))
@@ -121,7 +122,7 @@ struct BRX: AsyncParsableCommand {
         Terminal.writeLine("  🔑 \(Theme.current.primary)activate\(Ansi.reset) \(Theme.current.muted)- activate license\(Ansi.reset)")
         Terminal.writeLine("")
         Terminal.writeLine("\(Theme.current.muted)Run \(Theme.current.primary)brx <command> --help\(Theme.current.muted) for detailed help\(Ansi.reset)")
-        Terminal.writeLine("\(Theme.current.muted)Visit: https://github.com/yourusername/brx\(Ansi.reset)")
+        Terminal.writeLine("\(Theme.current.muted)Visit: https://github.com/thegptpros/brx\(Ansi.reset)")
         Terminal.writeLine("")
     }
 }
