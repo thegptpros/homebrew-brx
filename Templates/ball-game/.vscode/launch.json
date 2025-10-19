@@ -1,0 +1,26 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "BRX: Run with Live Reload",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${workspaceFolder}/.brx/DerivedData/Build/Products/Debug-iphonesimulator/{{NAME}}.app",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "BRX: Build",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "name": "BRX: Run (Terminal)",
+      "type": "lldb",
+      "request": "launch",
+      "program": "/usr/bin/brx",
+      "args": ["run"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    }
+  ]
+}

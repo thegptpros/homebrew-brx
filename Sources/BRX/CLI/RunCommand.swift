@@ -110,7 +110,7 @@ struct RunCommand: AsyncParsableCommand {
     
     private func fastReload(spec: ProjectSpec, udid: String) async throws {
         // Terminate app
-        try Shell.run("xcrun", args: ["simctl", "terminate", udid, spec.bundleId])
+        try Shell.run("/usr/bin/xcrun", args: ["simctl", "terminate", udid, spec.bundleId])
         
         // Find .app path
         let appPath = ".brx/DerivedData/Build/Products/Debug-iphonesimulator/\(spec.name).app"
@@ -141,7 +141,7 @@ struct RunCommand: AsyncParsableCommand {
         )
         
         // Terminate
-        try Shell.run("xcrun", args: ["simctl", "terminate", udid, spec.bundleId])
+        try Shell.run("/usr/bin/xcrun", args: ["simctl", "terminate", udid, spec.bundleId])
         
         // Install
         try Simulator.install(appPath: appPath, toUDID: udid)
