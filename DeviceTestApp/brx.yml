@@ -1,0 +1,4 @@
+name: DeviceTestApp
+bundle_id: com.brx.devicetestapp
+project: DeviceTestApp.xcodeproj
+scheme: DeviceTestApp
