@@ -38,7 +38,12 @@ enum DeviceCtl {
             
             // Parse device info from devicectl output
             // Format: "Name           Hostname                         Identifier                             State                Model"
-            // We need to extract the name and identifier, handling spaces in names
+            // Only include devices that are actually connected (state: "connected" or "available")
+            
+            // Check if the device is connected by looking at the State column
+            // State can be: "connected", "available (paired)", "unavailable", etc.
+            let isConnected = line.contains("connected") || line.contains("available (paired)")
+            if !isConnected { continue }
             
             // Find the identifier (UUID format) - it's always in the 3rd column
             let components = line.components(separatedBy: .whitespaces).filter { !$0.isEmpty }
