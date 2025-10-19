@@ -38,7 +38,7 @@ extension DevicesCommand {
             // Physical devices
             if DeviceCtl.isAvailable() {
                 Terminal.writeLine("")
-                Terminal.writeLine("\(Theme.current.primary)Physical Devices:\(Ansi.reset)")
+                Terminal.writeLine("\(Theme.current.primary)Connected devices:\(Ansi.reset)")
                 Terminal.writeLine("")
                 
                 do {
@@ -61,7 +61,7 @@ extension DevicesCommand {
                 }
             } else {
                 Terminal.writeLine("")
-                Terminal.writeLine("\(Theme.current.primary)Physical Devices:\(Ansi.reset)")
+                Terminal.writeLine("\(Theme.current.primary)Connected devices:\(Ansi.reset)")
                 Terminal.writeLine("")
                 Terminal.writeLine("  \(Theme.current.muted)devicectl not available (requires Xcode 15+)\(Ansi.reset)")
             }
