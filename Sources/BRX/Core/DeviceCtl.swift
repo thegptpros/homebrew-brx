@@ -2,7 +2,19 @@ import Foundation
 
 enum DeviceCtl {
     static func isAvailable() -> Bool {
-        return Shell.which("devicectl") != nil
+        // Check if devicectl is in PATH or in Xcode's usr/bin
+        return Shell.which("devicectl") != nil || 
+               FileManager.default.fileExists(atPath: "/Applications/Xcode.app/Contents/Developer/usr/bin/devicectl")
+    }
+    
+    private static func devicectlPath() -> String {
+        if let path = Shell.which("devicectl") {
+            return path
+        } else if FileManager.default.fileExists(atPath: "/Applications/Xcode.app/Contents/Developer/usr/bin/devicectl") {
+            return "/Applications/Xcode.app/Contents/Developer/usr/bin/devicectl"
+        } else {
+            return "devicectl" // fallback
+        }
     }
     
     static func listPhysicalDevices() throws -> [PhysicalDevice] {
@@ -10,24 +22,42 @@ enum DeviceCtl {
             throw DeviceCtlError.notAvailable
         }
         
-        let result = try Shell.run("/usr/bin/devicectl", args: ["list", "devices"])
+        let result = try Shell.run(devicectlPath(), args: ["list", "devices"])
         
         guard result.success else {
             throw DeviceCtlError.listFailed
         }
         
         var devices: [PhysicalDevice] = []
+        let lines = result.stdout.components(separatedBy: .newlines)
         
-        for line in result.stdout.components(separatedBy: .newlines) {
-            let trimmed = line.trimmingCharacters(in: .whitespaces)
-            if trimmed.isEmpty || trimmed.hasPrefix("--") { continue }
+        // Skip header line and separator line
+        for i in 2..<lines.count {
+            let line = lines[i].trimmingCharacters(in: .whitespaces)
+            if line.isEmpty { continue }
             
-            // Parse device info (simple parsing for now)
-            let parts = trimmed.components(separatedBy: .whitespaces).filter { !$0.isEmpty }
-            if parts.count >= 2 {
-                let name = parts[0]
-                let udid = parts[1]
-                devices.append(PhysicalDevice(name: name, udid: udid))
+            // Parse device info from devicectl output
+            // Format: "Name           Hostname                         Identifier                             State                Model"
+            // We need to extract the name and identifier, handling spaces in names
+            
+            // Find the identifier (UUID format) - it's always in the 3rd column
+            let components = line.components(separatedBy: .whitespaces).filter { !$0.isEmpty }
+            if components.count >= 3 {
+                // The identifier is always the 3rd component (index 2)
+                let udid = components[2]
+                
+                // Extract the device name - it's the first part before the hostname
+                // The hostname starts with a pattern like "Zacs-iPhone-1.coredevice.local"
+                // We want just "Zac's iPhone" (the part before the hostname)
+                
+                // Find the start of the hostname (it's the part that looks like "Zacs-iPhone-1.coredevice.local")
+                let hostnamePattern = #"[A-Za-z0-9-]+\.coredevice\.local"#
+                if let hostnameRange = line.range(of: hostnamePattern, options: .regularExpression) {
+                    let namePart = String(line[..<hostnameRange.lowerBound]).trimmingCharacters(in: .whitespaces)
+                    if !namePart.isEmpty {
+                        devices.append(PhysicalDevice(name: namePart, udid: udid))
+                    }
+                }
             }
         }
         
@@ -40,7 +70,7 @@ enum DeviceCtl {
     }
     
     static func install(appPath: String, toDevice udid: String) throws {
-        let result = try Shell.run("/usr/bin/devicectl", args: [
+        let result = try Shell.run(devicectlPath(), args: [
             "device", "install", "app", "--device", udid, appPath
         ])
         
@@ -50,7 +80,7 @@ enum DeviceCtl {
     }
     
     static func launch(bundleId: String, onDevice udid: String) throws {
-        let result = try Shell.run("/usr/bin/devicectl", args: [
+        let result = try Shell.run(devicectlPath(), args: [
             "device", "process", "launch", "--device", udid, bundleId
         ])
         
@@ -60,7 +90,7 @@ enum DeviceCtl {
     }
     
     static func checkDeviceTrust(udid: String) throws -> Bool {
-        let result = try Shell.run("/usr/bin/devicectl", args: [
+        let result = try Shell.run(devicectlPath(), args: [
             "list", "devices", "--device", udid
         ])
         
