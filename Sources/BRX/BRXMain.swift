@@ -6,7 +6,7 @@ struct BRX: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "brx",
         abstract: "Build, run, and ship iOS apps from your terminal.",
-        version: "3.1.8",
+        version: "3.1.9",
         subcommands: [
             BuildCommand.self,
             RunCommand.self,
@@ -124,6 +124,46 @@ struct BRX: AsyncParsableCommand {
         Terminal.writeLine("\(Theme.current.muted)Run \(Theme.current.primary)brx <command> --help\(Theme.current.muted) for detailed help\(Ansi.reset)")
         Terminal.writeLine("\(Theme.current.muted)Visit: https://github.com/thegptpros/brx\(Ansi.reset)")
         Terminal.writeLine("")
+        
+        // Interactive prompt
+        Terminal.write("\(Theme.current.primary)What would you like to do?\(Ansi.reset) ")
+        Terminal.write("\(Theme.current.muted)(e.g. 'run', 'build', 'devices')\(Ansi.reset) → ")
+        
+        guard let input = readLine()?.trimmingCharacters(in: .whitespaces).lowercased() else {
+            return
+        }
+        
+        if input.isEmpty {
+            return
+        }
+        
+        // Map common inputs to commands
+        switch input {
+        case "run", "r":
+            try await RunCommand().run()
+        case "build", "b":
+            try await BuildCommand().run()
+        case "ship", "s":
+            try await ShipCommand().run()
+        case "publish", "p":
+            try await PublishCommand().run()
+        case "devices", "d":
+            try await DevicesCommand.List().run()
+        case "status":
+            try await StatusCommand().run()
+        case "activate", "a":
+            try await ActivateCommand().run()
+        case "doctor", "doc":
+            try await DoctorCommand().run()
+        case "settings", "set":
+            try await SettingsCommand().run()
+        default:
+            Terminal.writeLine("")
+            Terminal.writeLine("\(Theme.current.error)Unknown command: \(input)\(Ansi.reset)")
+            Terminal.writeLine("")
+            Terminal.writeLine("Available commands: run, build, ship, publish, devices, status, activate, doctor, settings")
+            Terminal.writeLine("")
+        }
     }
 }
 

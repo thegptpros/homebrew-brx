@@ -35,8 +35,17 @@ struct RunCommand: AsyncParsableCommand {
         let spec = try ProjectSpec.load()
         let config = BRXConfig.load()
         
-        // Determine device
-        let targetDevice = device ?? config.defaults.iosDevice
+        // Determine device - prompt if not specified
+        let targetDevice: String
+        if let deviceArg = device {
+            targetDevice = deviceArg
+        } else if !config.defaults.iosDevice.isEmpty {
+            targetDevice = config.defaults.iosDevice
+        } else {
+            // Show device selection menu
+            targetDevice = try selectDevice()
+        }
+        
         let projectPath = spec.project ?? "\(spec.name).xcodeproj"
         let scheme = spec.scheme ?? spec.name
         
@@ -198,6 +207,88 @@ struct RunCommand: AsyncParsableCommand {
             _ = try Simulator.launch(bundleId: spec.bundleId, onUDID: device.udid)
         } else {
             try DeviceManager.launch(bundleId: spec.bundleId, on: device)
+        }
+    }
+    
+    private func selectDevice() throws -> String {
+        Terminal.writeLine("")
+        Terminal.writeLine("\(Theme.current.primary)Select a device:\(Ansi.reset)")
+        Terminal.writeLine("")
+        
+        var devices: [(name: String, type: String)] = []
+        
+        // List physical devices first
+        do {
+            let physicalDevices = try DeviceCtl.listPhysicalDevices()
+            if !physicalDevices.isEmpty {
+                Terminal.writeLine("  \(Theme.current.success)📱 Connected Devices:\(Ansi.reset)")
+                for (index, device) in physicalDevices.enumerated() {
+                    Terminal.writeLine("    \(Theme.current.primary)[\(index + 1)]\(Ansi.reset) \(device.name)")
+                    devices.append((device.name, "physical"))
+                }
+                Terminal.writeLine("")
+            }
+        } catch {
+            // No physical devices available
+        }
+        
+        // List simulators
+        do {
+            let result = try Shell.run("/usr/bin/xcrun", args: ["simctl", "list", "devices", "--json"])
+            if result.success, let data = result.stdout.data(using: .utf8),
+               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let devicesDict = json["devices"] as? [String: [[String: Any]]] {
+                
+                Terminal.writeLine("  \(Theme.current.muted)📲 Simulators:\(Ansi.reset)")
+                var simCount = 0
+                for (runtimeKey, sims) in devicesDict where runtimeKey.contains("iOS") {
+                    for sim in sims {
+                        if let name = sim["name"] as? String, simCount < 5 {
+                            let deviceIndex = devices.count + 1
+                            Terminal.writeLine("    \(Theme.current.primary)[\(deviceIndex)]\(Ansi.reset) \(name)")
+                            devices.append((name, "simulator"))
+                            simCount += 1
+                        }
+                    }
+                    if simCount >= 5 { break }
+                }
+                Terminal.writeLine("")
+            }
+        } catch {
+            // Failed to list simulators
+        }
+        
+        if devices.isEmpty {
+            throw RunCommandError.noDevicesAvailable
+        }
+        
+        Terminal.write("\(Theme.current.primary)Choose device number\(Ansi.reset) → ")
+        
+        guard let input = readLine()?.trimmingCharacters(in: .whitespaces),
+              let choice = Int(input),
+              choice > 0, choice <= devices.count else {
+            throw RunCommandError.invalidDeviceSelection
+        }
+        
+        let selectedDevice = devices[choice - 1]
+        Terminal.writeLine("")
+        Logger.step("📱", "selected: \(selectedDevice.name)")
+        Terminal.writeLine("")
+        
+        return selectedDevice.name
+    }
+}
+
+enum RunCommandError: Error, CustomStringConvertible {
+    case noDevicesAvailable
+    case invalidDeviceSelection
+    
+    var description: String {
+        switch self {
+        case .noDevicesAvailable:
+            return "\(Theme.current.error)No devices available\(Ansi.reset)\n\nTry running \(Theme.current.primary)brx devices\(Ansi.reset) to see available devices."
+        case .invalidDeviceSelection:
+            return "\(Theme.current.error)Invalid selection\(Ansi.reset)\n\nPlease enter a valid device number."
         }
     }
 }

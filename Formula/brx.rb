@@ -1,9 +1,9 @@
 class Brx < Formula
   desc "Build, run, and ship iOS apps from your terminal"
   homepage "https://brx.dev"
-  url "https://github.com/thegptpros/homebrew-brx/releases/download/v3.1.8/brx-3.1.8-macos.tar.gz"
-  sha256 "c958ec6ecbff6f6687fb76e3d64fb3e99e22aae65400e1e66a02d031661e9f7b"
-  version "3.1.8"
+  url "https://github.com/thegptpros/homebrew-brx/releases/download/v3.1.9/brx-3.1.9-macos.tar.gz"
+  sha256 "7059d06a45baa02d51e91861c536922c3ac34dc39d02d906fa92f1e544715b69"
+  version "3.1.9"
   license "Proprietary"
 
   # Requires macOS and Xcode
