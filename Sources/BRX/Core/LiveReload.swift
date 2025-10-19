@@ -1,7 +1,7 @@
 import Foundation
 
 class LiveReload {
-    private var fileMonitor: DispatchSourceFileSystemObject?
+    private var fileMonitors: [DispatchSourceFileSystemObject] = []
     private var lastTrigger: Date = .distantPast
     private let throttleInterval: TimeInterval = 0.5
     private let watchPaths: [String]
@@ -24,8 +24,10 @@ class LiveReload {
     }
     
     func stop() {
-        fileMonitor?.cancel()
-        fileMonitor = nil
+        for monitor in fileMonitors {
+            monitor.cancel()
+        }
+        fileMonitors.removeAll()
     }
     
     private func watchDirectory(_ path: String) {
@@ -35,23 +37,24 @@ class LiveReload {
         let descriptor = open(url.path, O_EVTONLY)
         guard descriptor >= 0 else { return }
         
-        let queue = DispatchQueue(label: "com.brx.livereload")
+        let queue = DispatchQueue(label: "com.brx.livereload.\(path)")
         
-        fileMonitor = DispatchSource.makeFileSystemObjectSource(
+        let monitor = DispatchSource.makeFileSystemObjectSource(
             fileDescriptor: descriptor,
             eventMask: [.write, .extend, .attrib, .delete, .rename],
             queue: queue
         )
         
-        fileMonitor?.setEventHandler { [weak self] in
+        monitor.setEventHandler { [weak self] in
             self?.handleFileChange(in: path)
         }
         
-        fileMonitor?.setCancelHandler {
+        monitor.setCancelHandler {
             close(descriptor)
         }
         
-        fileMonitor?.resume()
+        monitor.resume()
+        fileMonitors.append(monitor)
     }
     
     private func handleFileChange(in path: String) {

@@ -43,7 +43,6 @@ struct RunCommand: AsyncParsableCommand {
         // Ensure device exists
         let udid = try Simulator.ensureDevice(named: targetDevice, platform: .iOS)
         
-        // Phase 1: Build (0-40%)
         Logger.step("⚙️", "building \(spec.name) (Debug)")
         
         let destination = "platform=iOS Simulator,id=\(udid)"
@@ -54,14 +53,13 @@ struct RunCommand: AsyncParsableCommand {
             destination: destination
         )
         
-        // Phase 2: Boot (40-70%)
         Logger.step("📱", "booting \(targetDevice) (Simulator)")
         try Simulator.bootIfNeeded(udid: udid)
         
-        // Phase 3: Install (70-90%)
+        Logger.step("📦", "installing app...")
         try Simulator.install(appPath: appPath, toUDID: udid)
         
-        // Phase 4: Launch (90-100%)
+        Logger.step("🚀", "launching app...")
         let (pid, osVersion) = try Simulator.launch(bundleId: spec.bundleId, onUDID: udid)
         
         Logger.success("running \"\(spec.name)\" on \(targetDevice) (ios \(osVersion)) — pid \(pid)")
@@ -103,8 +101,10 @@ struct RunCommand: AsyncParsableCommand {
             
             liveReload.start()
             
-            // Keep the process running
-            dispatchMain()
+            // Keep the process running indefinitely
+            while true {
+                try await Task.sleep(nanoseconds: 1_000_000_000_000) // Sleep for ~16 minutes at a time
+            }
         }
     }
     

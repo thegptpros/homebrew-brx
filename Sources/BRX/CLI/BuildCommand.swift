@@ -86,6 +86,7 @@ struct BuildCommand: AsyncParsableCommand {
         let projectPath = projectName
         
         // Copy template
+        Logger.step("📦", "copying template files...")
         try copyTemplate(from: templatePath, to: projectPath)
         
         // Update brx.yml with project name and bundle ID
@@ -98,12 +99,12 @@ struct BuildCommand: AsyncParsableCommand {
         let originalDir = FS.currentDirectory()
         FileManager.default.changeCurrentDirectoryPath(projectPath)
         
-        Logger.step("⚙️", "generating Xcode project")
+        Logger.step("⚙️", "generating Xcode project...")
         let spec = try ProjectSpec.load()
         try ProjectGen.generate(spec: spec)
         
         // Build the project automatically
-        Logger.step("🔨", "building project")
+        Logger.step("🔨", "building project...")
         let config = BRXConfig.load()
         let targetDevice = config.defaults.iosDevice
         let udid = try Simulator.ensureDevice(named: targetDevice, platform: .iOS)

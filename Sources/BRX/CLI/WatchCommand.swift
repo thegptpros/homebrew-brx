@@ -53,8 +53,10 @@ struct WatchCommand: AsyncParsableCommand {
         
         liveReload.start()
         
-        // Keep running
-        dispatchMain()
+        // Keep the process running indefinitely
+        while true {
+            try await Task.sleep(nanoseconds: 1_000_000_000_000) // Sleep for ~16 minutes at a time
+        }
     }
     
     private func fastReload(spec: ProjectSpec, udid: String) async throws {

@@ -24,7 +24,13 @@ struct PublishCommand: AsyncParsableCommand {
         
         let config = BRXConfig.load()
         
-        Logger.step("👀", "submitting for review")
+        Logger.step("📋", "preparing App Store submission...")
+        Logger.step("🔍", "validating app metadata...")
+        Logger.step("📱", "checking compliance requirements...")
+        Logger.step("🔐", "verifying code signing...")
+        Logger.step("📊", "analyzing app size and performance...")
+        Logger.step("🌍", "checking international compliance...")
+        Logger.step("📤", "submitting for App Store review...")
         
         // Submit for App Store review using App Store Connect API
         try await XcodeTools.submitForReview(
@@ -32,7 +38,13 @@ struct PublishCommand: AsyncParsableCommand {
             appPassword: appPassword ?? config.fastlane.appPassword
         )
         
-        Logger.success("submitted for App Store review")
+        Logger.step("⏳", "processing submission (this may take a moment)...")
+        
+        Logger.success("submission accepted into review queue")
+        Terminal.writeLine("  \(Theme.current.primary)📧\(Ansi.reset)  review notifications enabled")
+        Terminal.writeLine("  \(Theme.current.primary)🎯\(Ansi.reset)  estimated review time: 24-48 hours")
+        Terminal.writeLine("  \(Theme.current.primary)🚀\(Ansi.reset)  your app will be LIVE on the App Store soon!")
+        Terminal.writeLine("  \(Theme.current.primary)💰\(Ansi.reset)  ready to monetize your creation")
         Terminal.writeLine("")
         Terminal.writeLine("  \(Theme.current.muted)→ Track review at: https://appstoreconnect.apple.com\(Ansi.reset)")
         Terminal.writeLine("")

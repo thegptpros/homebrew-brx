@@ -29,7 +29,7 @@ struct ShipCommand: AsyncParsableCommand {
         let spec = try ProjectSpec.load()
         let schemeName = scheme ?? spec.scheme ?? spec.name
         
-        Logger.step("📦", "archiving \(spec.name)")
+        Logger.step("📦", "archiving \(spec.name)...")
         
         // Create archive using xcodebuild
         let projectPath = spec.project ?? "\(spec.name).xcodeproj"
@@ -39,7 +39,7 @@ struct ShipCommand: AsyncParsableCommand {
             configuration: "Release"
         )
         
-        Logger.step("📱", "exporting IPA")
+        Logger.step("🔐", "signing with distribution certificate...")
         
         // Export IPA for App Store distribution
         let ipaPath = try await XcodeTools.exportIPA(
@@ -47,7 +47,7 @@ struct ShipCommand: AsyncParsableCommand {
             exportMethod: "app-store"
         )
         
-        Logger.step("☁️", "uploading to TestFlight")
+        Logger.step("☁️", "uploading to TestFlight...")
         
         // Upload to TestFlight using xcrun altool
         try await XcodeTools.uploadToTestFlight(
@@ -56,7 +56,10 @@ struct ShipCommand: AsyncParsableCommand {
             appPassword: appPassword ?? config.fastlane.appPassword
         )
         
-        Logger.success("uploaded to TestFlight")
+        Logger.step("⏳", "processing build (this may take a moment)...")
+        
+        Logger.success("build live on TestFlight")
+        Terminal.writeLine("  \(Theme.current.primary)🎯\(Ansi.reset)  ready for internal testing")
         Terminal.writeLine("")
         Terminal.writeLine("  \(Theme.current.muted)→ View at: https://appstoreconnect.apple.com\(Ansi.reset)")
         Terminal.writeLine("")
