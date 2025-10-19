@@ -33,6 +33,40 @@ enum DeviceCtl {
         
         return devices
     }
+    
+    static func findPhysicalDevice(named name: String) throws -> PhysicalDevice? {
+        let devices = try listPhysicalDevices()
+        return devices.first { $0.name.lowercased().contains(name.lowercased()) }
+    }
+    
+    static func install(appPath: String, toDevice udid: String) throws {
+        let result = try Shell.run("/usr/bin/devicectl", args: [
+            "device", "install", "app", "--device", udid, appPath
+        ])
+        
+        guard result.success else {
+            throw DeviceCtlError.installFailed(appPath)
+        }
+    }
+    
+    static func launch(bundleId: String, onDevice udid: String) throws {
+        let result = try Shell.run("/usr/bin/devicectl", args: [
+            "device", "process", "launch", "--device", udid, bundleId
+        ])
+        
+        guard result.success else {
+            throw DeviceCtlError.launchFailed(bundleId)
+        }
+    }
+    
+    static func checkDeviceTrust(udid: String) throws -> Bool {
+        let result = try Shell.run("/usr/bin/devicectl", args: [
+            "list", "devices", "--device", udid
+        ])
+        
+        // If the command succeeds and returns device info, device is trusted
+        return result.success && !result.stdout.isEmpty
+    }
 }
 
 struct PhysicalDevice {
@@ -43,6 +77,9 @@ struct PhysicalDevice {
 enum DeviceCtlError: Error, CustomStringConvertible {
     case notAvailable
     case listFailed
+    case installFailed(String)
+    case launchFailed(String)
+    case deviceNotTrusted(String)
     
     var description: String {
         switch self {
@@ -50,6 +87,12 @@ enum DeviceCtlError: Error, CustomStringConvertible {
             return "devicectl not available (requires Xcode 15+)"
         case .listFailed:
             return "Failed to list physical devices"
+        case .installFailed(let appPath):
+            return "Failed to install app to device: \(appPath)"
+        case .launchFailed(let bundleId):
+            return "Failed to launch app on device: \(bundleId)"
+        case .deviceNotTrusted(let udid):
+            return "Device not trusted. Please unlock your device and tap 'Trust' when prompted: \(udid)"
         }
     }
 }

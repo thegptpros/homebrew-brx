@@ -41,10 +41,29 @@ extension DevicesCommand {
                 Terminal.writeLine("\(Theme.current.primary)Physical Devices:\(Ansi.reset)")
                 Terminal.writeLine("")
                 
-                let devices = try DeviceCtl.listPhysicalDevices()
-                for device in devices {
-                    Terminal.writeLine("  • \(device.name) (\(device.udid))")
+                do {
+                    let devices = try DeviceCtl.listPhysicalDevices()
+                    if devices.isEmpty {
+                        Terminal.writeLine("  \(Theme.current.muted)No physical devices connected\(Ansi.reset)")
+                        Terminal.writeLine("  \(Theme.current.muted)→ Connect your iPhone via USB to see it here\(Ansi.reset)")
+                    } else {
+                        for device in devices {
+                            let isTrusted = (try? DeviceCtl.checkDeviceTrust(udid: device.udid)) ?? false
+                            let trustStatus = isTrusted ? Theme.current.success + "●" + Ansi.reset : Theme.current.muted + "○" + Ansi.reset
+                            Terminal.writeLine("  \(trustStatus) \(device.name)")
+                            if !isTrusted {
+                                Terminal.writeLine("    \(Theme.current.muted)→ Unlock device and tap 'Trust' to enable deployment\(Ansi.reset)")
+                            }
+                        }
+                    }
+                } catch {
+                    Terminal.writeLine("  \(Theme.current.error)Failed to list physical devices: \(error)\(Ansi.reset)")
                 }
+            } else {
+                Terminal.writeLine("")
+                Terminal.writeLine("\(Theme.current.primary)Physical Devices:\(Ansi.reset)")
+                Terminal.writeLine("")
+                Terminal.writeLine("  \(Theme.current.muted)devicectl not available (requires Xcode 15+)\(Ansi.reset)")
             }
             
             Terminal.writeLine("")

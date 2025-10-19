@@ -4,7 +4,7 @@ import ArgumentParser
 struct RunCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "run",
-        abstract: "Build, run on simulator & watch for changes"
+        abstract: "Build, run on device/simulator & watch for changes"
     )
     
     @Option(name: .long, help: "Target device (overrides config)")
@@ -40,12 +40,20 @@ struct RunCommand: AsyncParsableCommand {
         let projectPath = spec.project ?? "\(spec.name).xcodeproj"
         let scheme = spec.scheme ?? spec.name
         
-        // Ensure device exists
-        let udid = try Simulator.ensureDevice(named: targetDevice, platform: .iOS)
+        // Find or create device (supports both simulators and physical devices)
+        let targetDeviceInfo = try DeviceManager.ensureDevice(named: targetDevice)
         
         Logger.step("⚙️", "building \(spec.name) (Debug)")
         
-        let destination = "platform=iOS Simulator,id=\(udid)"
+        // Build for the appropriate platform
+        let destination: String
+        switch targetDeviceInfo.type {
+        case .simulator:
+            destination = "platform=iOS Simulator,id=\(targetDeviceInfo.udid)"
+        case .physical:
+            destination = "generic/platform=iOS"
+        }
+        
         let appPath = try XcodeTools.build(
             project: projectPath,
             scheme: scheme,
@@ -53,16 +61,38 @@ struct RunCommand: AsyncParsableCommand {
             destination: destination
         )
         
-        Logger.step("📱", "booting \(targetDevice) (Simulator)")
-        try Simulator.bootIfNeeded(udid: udid)
+        // Boot device if needed (only for simulators)
+        if targetDeviceInfo.type == .simulator {
+            Logger.step("📱", "booting \(targetDevice) (Simulator)")
+            try DeviceManager.bootIfNeeded(targetDeviceInfo)
+        } else {
+            Logger.step("📱", "connecting to \(targetDevice) (Physical Device)")
+            
+            // Check if device is trusted
+            let isTrusted = try DeviceManager.checkDeviceTrust(targetDeviceInfo)
+            if !isTrusted {
+                Logger.step("🔐", "device trust required")
+                Terminal.writeLine("")
+                Terminal.writeLine("  \(Theme.current.warning)⚠️  Device Trust Required\(Ansi.reset)")
+                Terminal.writeLine("  \(Theme.current.muted)→ Unlock your iPhone and tap 'Trust' when prompted\(Ansi.reset)")
+                Terminal.writeLine("  \(Theme.current.muted)→ Then run this command again\(Ansi.reset)")
+                Terminal.writeLine("")
+                throw DeviceError.deviceNotTrusted(targetDeviceInfo.udid)
+            }
+        }
         
         Logger.step("📦", "installing app...")
-        try Simulator.install(appPath: appPath, toUDID: udid)
+        try DeviceManager.install(appPath: appPath, to: targetDeviceInfo)
         
         Logger.step("🚀", "launching app...")
-        let (pid, osVersion) = try Simulator.launch(bundleId: spec.bundleId, onUDID: udid)
         
-        Logger.success("running \"\(spec.name)\" on \(targetDevice) (ios \(osVersion)) — pid \(pid)")
+        if targetDeviceInfo.type == .simulator {
+            let (pid, osVersion) = try Simulator.launch(bundleId: spec.bundleId, onUDID: targetDeviceInfo.udid)
+            Logger.success("running \"\(spec.name)\" on \(targetDevice) (ios \(osVersion)) — pid \(pid)")
+        } else {
+            try DeviceManager.launch(bundleId: spec.bundleId, on: targetDeviceInfo)
+            Logger.success("running \"\(spec.name)\" on \(targetDevice) (Physical Device)")
+        }
         Terminal.writeLine("")
         
         // Show build limit message (only for free users)
@@ -83,13 +113,13 @@ struct RunCommand: AsyncParsableCommand {
                         switch changeType {
                         case .assets:
                             // Fast path: just reinstall
-                            try await self.fastReload(spec: spec, udid: udid)
+                            try await self.fastReload(spec: spec, device: targetDeviceInfo)
                             let elapsed = Date().timeIntervalSince(start)
                             Logger.step("Δ", "assets  → fast install & relaunch (\(Int(elapsed * 1000)) ms)")
                             
                         case .code:
                             // Full rebuild
-                            try await self.fullRebuild(spec: spec, config: config, udid: udid, destination: destination)
+                            try await self.fullRebuild(spec: spec, config: config, device: targetDeviceInfo, destination: destination)
                             let elapsed = Date().timeIntervalSince(start)
                             Logger.step("Δ", "code    → incremental build, install, launch (\(String(format: "%.1f", elapsed)) s)")
                         }
@@ -108,21 +138,31 @@ struct RunCommand: AsyncParsableCommand {
         }
     }
     
-    private func fastReload(spec: ProjectSpec, udid: String) async throws {
+    private func fastReload(spec: ProjectSpec, device: Device) async throws {
         // Terminate app
-        try Shell.run("/usr/bin/xcrun", args: ["simctl", "terminate", udid, spec.bundleId])
+        switch device.type {
+        case .simulator:
+            try Shell.run("/usr/bin/xcrun", args: ["simctl", "terminate", device.udid, spec.bundleId])
+        case .physical:
+            // For physical devices, we'll just reinstall and launch
+            break
+        }
         
         // Find .app path
         let appPath = ".brx/DerivedData/Build/Products/Debug-iphonesimulator/\(spec.name).app"
         
         // Reinstall
-        try Simulator.install(appPath: appPath, toUDID: udid)
+        try DeviceManager.install(appPath: appPath, to: device)
         
         // Relaunch
-        _ = try Simulator.launch(bundleId: spec.bundleId, onUDID: udid)
+        if device.type == .simulator {
+            _ = try Simulator.launch(bundleId: spec.bundleId, onUDID: device.udid)
+        } else {
+            try DeviceManager.launch(bundleId: spec.bundleId, on: device)
+        }
     }
     
-    private func fullRebuild(spec: ProjectSpec, config: BRXConfig, udid: String, destination: String) async throws {
+    private func fullRebuild(spec: ProjectSpec, config: BRXConfig, device: Device, destination: String) async throws {
         // Auto-regenerate project if project.yml exists (for new files/directories)
         if FS.exists("project.yml") {
             Logger.step("🔄", "regenerating project for new files")
@@ -141,13 +181,23 @@ struct RunCommand: AsyncParsableCommand {
         )
         
         // Terminate
-        try Shell.run("/usr/bin/xcrun", args: ["simctl", "terminate", udid, spec.bundleId])
+        switch device.type {
+        case .simulator:
+            try Shell.run("/usr/bin/xcrun", args: ["simctl", "terminate", device.udid, spec.bundleId])
+        case .physical:
+            // For physical devices, we'll just reinstall and launch
+            break
+        }
         
         // Install
-        try Simulator.install(appPath: appPath, toUDID: udid)
+        try DeviceManager.install(appPath: appPath, to: device)
         
         // Launch
-        _ = try Simulator.launch(bundleId: spec.bundleId, onUDID: udid)
+        if device.type == .simulator {
+            _ = try Simulator.launch(bundleId: spec.bundleId, onUDID: device.udid)
+        } else {
+            try DeviceManager.launch(bundleId: spec.bundleId, on: device)
+        }
     }
 }
 
