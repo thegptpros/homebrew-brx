@@ -11,27 +11,66 @@ enum XcodeTools {
         
         try? FS.createDirectory(derivedDataPath)
         
-        let args = [
+        var args = [
             "-project", project,
             "-scheme", scheme,
             "-configuration", configuration,
             "-destination", destination,
-            "-derivedDataPath", derivedDataPath,
-            "build"
+            "-derivedDataPath", derivedDataPath
         ]
+        
+        // Add code signing parameters for physical devices
+        let isPhysicalDevice = !destination.contains("Simulator")
+        var needsSigningSetup = false
+        
+        if isPhysicalDevice {
+            if let team = try? CodeSigning.selectDevelopmentTeam() {
+                Logger.step("🔐", "using development team: \(team.email)")
+                args.append(contentsOf: [
+                    "CODE_SIGN_IDENTITY=Apple Development",
+                    "DEVELOPMENT_TEAM=\(team.id)",
+                    "-allowProvisioningUpdates"
+                ])
+            } else {
+                needsSigningSetup = true
+            }
+        }
+        
+        args.append("build")
         
         let result = try Shell.run("/usr/bin/xcodebuild", args: args, timeout: 300)
         
-        guard result.success else {
-            throw XcodeError.buildFailed(result.stderr)
+        // Check if build failed due to provisioning issues
+        if !result.success {
+            let errorOutput = result.stderr.lowercased()
+            let isProvisioningError = errorOutput.contains("no profiles") || 
+                                     errorOutput.contains("no account for team") ||
+                                     errorOutput.contains("provisioning profile") ||
+                                     needsSigningSetup
+            
+            if isProvisioningError && isPhysicalDevice {
+                // Open Xcode and guide the user through setup
+                try CodeSigning.setupSigningInteractive(projectPath: project)
+                
+                // Retry the build after user setup
+                Logger.step("🔨", "rebuilding with configured signing...")
+                let retryResult = try Shell.run("/usr/bin/xcodebuild", args: args, timeout: 300)
+                
+                guard retryResult.success else {
+                    throw XcodeError.buildFailed(retryResult.stderr)
+                }
+            } else {
+                throw XcodeError.buildFailed(result.stderr)
+            }
         }
         
-        // Find .app in DerivedData
-        return try findApp(in: derivedDataPath, configuration: configuration)
+        // Find .app in DerivedData - determine platform from destination
+        let platform = destination.contains("Simulator") ? "iphonesimulator" : "iphoneos"
+        return try findApp(in: derivedDataPath, configuration: configuration, platform: platform)
     }
     
-    private static func findApp(in derivedDataPath: String, configuration: String) throws -> String {
-        let buildProductsPath = "\(derivedDataPath)/Build/Products/\(configuration)-iphonesimulator"
+    private static func findApp(in derivedDataPath: String, configuration: String, platform: String = "iphonesimulator") throws -> String {
+        let buildProductsPath = "\(derivedDataPath)/Build/Products/\(configuration)-\(platform)"
         
         guard FS.exists(buildProductsPath) else {
             throw XcodeError.appNotFound

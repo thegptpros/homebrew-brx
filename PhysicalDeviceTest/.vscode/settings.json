@@ -1,0 +1,36 @@
+{
+  "files.exclude": {
+    "**/.brx": true,
+    "**/DerivedData": true,
+    "**/*.xcodeproj": true,
+    "**/*.xcworkspace": true
+  },
+  "search.exclude": {
+    "**/.brx": true,
+    "**/DerivedData": true,
+    "**/*.xcodeproj": true,
+    "**/*.xcworkspace": true
+  },
+  "terminal.integrated.defaultProfile.osx": "zsh",
+  "terminal.integrated.profiles.osx": {
+    "brx": {
+      "path": "/bin/zsh",
+      "args": ["-c", "echo '🚀 BRX iOS Development Environment'; echo 'Use: brx build, brx run, brx ship, brx publish'; echo ''; exec zsh"]
+    }
+  },
+  "swift.path": "/usr/bin/swift",
+  "files.associations": {
+    "*.yml": "yaml",
+    "brx.yml": "yaml",
+    "project.yml": "yaml"
+  },
+  "yaml.schemas": {
+    "https://json.schemastore.org/xcodegen": "project.yml"
+  },
+  "editor.rulers": [100],
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true
+}

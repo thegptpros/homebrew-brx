@@ -1,0 +1,29 @@
+{
+  "" : {
+    "diagnostics" : "/Users/zac/Desktop/code/brx/PhysicalDeviceTest/build/PhysicalDeviceTest.build/Debug-iphoneos/PhysicalDeviceTest.build/Objects-normal/arm64/PhysicalDeviceTest-primary.dia",
+    "emit-module-dependencies" : "/Users/zac/Desktop/code/brx/PhysicalDeviceTest/build/PhysicalDeviceTest.build/Debug-iphoneos/PhysicalDeviceTest.build/Objects-normal/arm64/PhysicalDeviceTest-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/zac/Desktop/code/brx/PhysicalDeviceTest/build/PhysicalDeviceTest.build/Debug-iphoneos/PhysicalDeviceTest.build/Objects-normal/arm64/PhysicalDeviceTest-primary-emit-module.dia",
+    "pch" : "/Users/zac/Desktop/code/brx/PhysicalDeviceTest/build/PhysicalDeviceTest.build/Debug-iphoneos/PhysicalDeviceTest.build/Objects-normal/arm64/PhysicalDeviceTest-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/zac/Desktop/code/brx/PhysicalDeviceTest/build/PhysicalDeviceTest.build/Debug-iphoneos/PhysicalDeviceTest.build/Objects-normal/arm64/PhysicalDeviceTest-primary.swiftdeps"
+  },
+  "/Users/zac/Desktop/code/brx/PhysicalDeviceTest/Sources/App.swift" : {
+    "const-values" : "/Users/zac/Desktop/code/brx/PhysicalDeviceTest/build/PhysicalDeviceTest.build/Debug-iphoneos/PhysicalDeviceTest.build/Objects-normal/arm64/App.swiftconstvalues",
+    "dependencies" : "/Users/zac/Desktop/code/brx/PhysicalDeviceTest/build/PhysicalDeviceTest.build/Debug-iphoneos/PhysicalDeviceTest.build/Objects-normal/arm64/App.d",
+    "diagnostics" : "/Users/zac/Desktop/code/brx/PhysicalDeviceTest/build/PhysicalDeviceTest.build/Debug-iphoneos/PhysicalDeviceTest.build/Objects-normal/arm64/App.dia",
+    "index-unit-output-path" : "/PhysicalDeviceTest.build/Debug-iphoneos/PhysicalDeviceTest.build/Objects-normal/arm64/App.o",
+    "llvm-bc" : "/Users/zac/Desktop/code/brx/PhysicalDeviceTest/build/PhysicalDeviceTest.build/Debug-iphoneos/PhysicalDeviceTest.build/Objects-normal/arm64/App.bc",
+    "object" : "/Users/zac/Desktop/code/brx/PhysicalDeviceTest/build/PhysicalDeviceTest.build/Debug-iphoneos/PhysicalDeviceTest.build/Objects-normal/arm64/App.o",
+    "swift-dependencies" : "/Users/zac/Desktop/code/brx/PhysicalDeviceTest/build/PhysicalDeviceTest.build/Debug-iphoneos/PhysicalDeviceTest.build/Objects-normal/arm64/App.swiftdeps",
+    "swiftmodule" : "/Users/zac/Desktop/code/brx/PhysicalDeviceTest/build/PhysicalDeviceTest.build/Debug-iphoneos/PhysicalDeviceTest.build/Objects-normal/arm64/App~partial.swiftmodule"
+  },
+  "/Users/zac/Desktop/code/brx/PhysicalDeviceTest/Sources/ContentView.swift" : {
+    "const-values" : "/Users/zac/Desktop/code/brx/PhysicalDeviceTest/build/PhysicalDeviceTest.build/Debug-iphoneos/PhysicalDeviceTest.build/Objects-normal/arm64/ContentView.swiftconstvalues",
+    "dependencies" : "/Users/zac/Desktop/code/brx/PhysicalDeviceTest/build/PhysicalDeviceTest.build/Debug-iphoneos/PhysicalDeviceTest.build/Objects-normal/arm64/ContentView.d",
+    "diagnostics" : "/Users/zac/Desktop/code/brx/PhysicalDeviceTest/build/PhysicalDeviceTest.build/Debug-iphoneos/PhysicalDeviceTest.build/Objects-normal/arm64/ContentView.dia",
+    "index-unit-output-path" : "/PhysicalDeviceTest.build/Debug-iphoneos/PhysicalDeviceTest.build/Objects-normal/arm64/ContentView.o",
+    "llvm-bc" : "/Users/zac/Desktop/code/brx/PhysicalDeviceTest/build/PhysicalDeviceTest.build/Debug-iphoneos/PhysicalDeviceTest.build/Objects-normal/arm64/ContentView.bc",
+    "object" : "/Users/zac/Desktop/code/brx/PhysicalDeviceTest/build/PhysicalDeviceTest.build/Debug-iphoneos/PhysicalDeviceTest.build/Objects-normal/arm64/ContentView.o",
+    "swift-dependencies" : "/Users/zac/Desktop/code/brx/PhysicalDeviceTest/build/PhysicalDeviceTest.build/Debug-iphoneos/PhysicalDeviceTest.build/Objects-normal/arm64/ContentView.swiftdeps",
+    "swiftmodule" : "/Users/zac/Desktop/code/brx/PhysicalDeviceTest/build/PhysicalDeviceTest.build/Debug-iphoneos/PhysicalDeviceTest.build/Objects-normal/arm64/ContentView~partial.swiftmodule"
+  }
+}

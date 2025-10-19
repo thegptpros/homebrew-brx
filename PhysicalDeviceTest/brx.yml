@@ -1,0 +1,4 @@
+name: PhysicalDeviceTest
+bundle_id: com.brx.physicaldevicetest
+project: PhysicalDeviceTest.xcodeproj
+scheme: PhysicalDeviceTest

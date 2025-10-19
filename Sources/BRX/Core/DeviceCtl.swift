@@ -90,12 +90,14 @@ enum DeviceCtl {
     }
     
     static func checkDeviceTrust(udid: String) throws -> Bool {
+        // Try to get device details, which should trigger trust prompt if not trusted
         let result = try Shell.run(devicectlPath(), args: [
-            "list", "devices", "--device", udid
+            "device", "info", "details", "--device", udid
         ])
         
-        // If the command succeeds and returns device info, device is trusted
-        return result.success && !result.stdout.isEmpty
+        // If the command succeeds, device is trusted
+        // If it fails with trust-related error, device is not trusted
+        return result.success
     }
 }
 

@@ -148,8 +148,9 @@ struct RunCommand: AsyncParsableCommand {
             break
         }
         
-        // Find .app path
-        let appPath = ".brx/DerivedData/Build/Products/Debug-iphonesimulator/\(spec.name).app"
+        // Find .app path - use correct platform
+        let platform = device.type == .simulator ? "iphonesimulator" : "iphoneos"
+        let appPath = ".brx/DerivedData/Build/Products/Debug-\(platform)/\(spec.name).app"
         
         // Reinstall
         try DeviceManager.install(appPath: appPath, to: device)
