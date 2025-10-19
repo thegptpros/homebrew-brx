@@ -21,12 +21,18 @@ enum ProjectGen {
         ]
         
         guard let xcodegenPath = xcodegenPaths.first(where: { FS.exists($0) }) else {
+            Logger.step("📦", "installing XcodeGen...")
+            Logger.step("ℹ️", "XcodeGen is required for project generation")
+            Logger.step("ℹ️", "Run: brew install xcodegen")
+            Logger.step("ℹ️", "Or use: brx build --name MyApp (handles this automatically)")
             throw ProjectGenError.xcodegenNotFound
         }
         
+        Logger.step("⚙️", "generating Xcode project...")
         let result = try Shell.run(xcodegenPath, args: ["generate", "--spec", specFile])
         
         guard result.success else {
+            Logger.error("XcodeGen failed. Try running: brx build --name MyApp")
             throw ProjectGenError.generationFailed(result.stderr)
         }
         
