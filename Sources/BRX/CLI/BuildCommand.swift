@@ -22,6 +22,9 @@ struct BuildCommand: AsyncParsableCommand {
     @Flag(name: .long, help: "Show verbose xcodebuild output")
     var verbose: Bool = false
     
+    @Flag(name: .long, help: "Build for first connected physical device")
+    var realsim: Bool = false
+    
     func run() async throws {
         Signature.start()
         defer { Signature.stopBlink() }
@@ -55,7 +58,18 @@ struct BuildCommand: AsyncParsableCommand {
         
         let projectPath = spec.project ?? "\(spec.name).xcodeproj"
         let scheme = spec.scheme ?? spec.name
-        let targetDevice = config.defaults.iosDevice
+        let targetDevice: String
+        if realsim {
+            // Use first connected physical device
+            let physicalDevices = try DeviceCtl.listPhysicalDevices()
+            if physicalDevices.isEmpty {
+                throw BuildError.noPhysicalDevices
+            }
+            targetDevice = physicalDevices.first!.name
+            Logger.step("📱", "using first connected device: \(targetDevice)")
+        } else {
+            targetDevice = config.defaults.iosDevice
+        }
         
         // Ensure device exists for destination
         let udid = try Simulator.ensureDevice(named: targetDevice, platform: .iOS)
@@ -106,7 +120,18 @@ struct BuildCommand: AsyncParsableCommand {
         // Build the project automatically
         Logger.step("🔨", "building project...")
         let config = BRXConfig.load()
-        let targetDevice = config.defaults.iosDevice
+        let targetDevice: String
+        if realsim {
+            // Use first connected physical device
+            let physicalDevices = try DeviceCtl.listPhysicalDevices()
+            if physicalDevices.isEmpty {
+                throw BuildError.noPhysicalDevices
+            }
+            targetDevice = physicalDevices.first!.name
+            Logger.step("📱", "using first connected device: \(targetDevice)")
+        } else {
+            targetDevice = config.defaults.iosDevice
+        }
         let udid = try Simulator.ensureDevice(named: targetDevice, platform: .iOS)
         let destination = "platform=iOS Simulator,id=\(udid)"
         
@@ -264,6 +289,7 @@ enum BuildError: Error, CustomStringConvertible {
     case projectNameRequired
     case templateNotFound(String)
     case directoryExists(String)
+    case noPhysicalDevices
     
     var description: String {
         switch self {
@@ -273,6 +299,8 @@ enum BuildError: Error, CustomStringConvertible {
             return "Template '\(name)' not found"
         case .directoryExists(let name):
             return "Directory '\(name)' already exists"
+        case .noPhysicalDevices:
+            return "No physical devices connected. Connect your iPhone and try again."
         }
     }
 }

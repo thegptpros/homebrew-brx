@@ -16,6 +16,9 @@ struct RunCommand: AsyncParsableCommand {
     @Flag(name: .long, help: "Run once without watching for changes")
     var noWatch: Bool = false
     
+    @Flag(name: .long, help: "Launch on first connected physical device")
+    var realsim: Bool = false
+    
     func run() async throws {
         Signature.start()
         defer { Signature.stopBlink() }
@@ -35,9 +38,17 @@ struct RunCommand: AsyncParsableCommand {
         let spec = try ProjectSpec.load()
         let config = BRXConfig.load()
         
-        // Determine device - prompt if not specified
+        // Determine device - handle -realsim flag first
         let targetDevice: String
-        if let deviceArg = device {
+        if realsim {
+            // Use first connected physical device
+            let physicalDevices = try DeviceCtl.listPhysicalDevices()
+            if physicalDevices.isEmpty {
+                throw RunCommandError.noDevicesAvailable
+            }
+            targetDevice = physicalDevices.first!.name
+            Logger.step("📱", "using first connected device: \(targetDevice)")
+        } else if let deviceArg = device {
             targetDevice = deviceArg
         } else if !config.defaults.iosDevice.isEmpty {
             targetDevice = config.defaults.iosDevice

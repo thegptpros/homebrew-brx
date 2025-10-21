@@ -107,6 +107,7 @@ struct BRX: AsyncParsableCommand {
         Terminal.writeLine("")
         Terminal.writeLine("  🚀 \(Theme.current.primary)build\(Ansi.reset)    \(Theme.current.muted)- create project from template & build\(Ansi.reset)")
         Terminal.writeLine("  ▶️  \(Theme.current.primary)run\(Ansi.reset)      \(Theme.current.muted)- build, launch & watch for changes\(Ansi.reset)")
+        Terminal.writeLine("  📱 \(Theme.current.primary)run --realsim\(Ansi.reset) \(Theme.current.muted)- launch on connected iPhone\(Ansi.reset)")
         Terminal.writeLine("")
         Terminal.writeLine("\(Theme.current.primary)Test & Deploy\(Ansi.reset)")
         Terminal.writeLine("")
@@ -141,6 +142,8 @@ struct BRX: AsyncParsableCommand {
         switch input {
         case "run", "r":
             try await RunCommand().run()
+        case "realsim", "rs":
+            try await RunCommand(realsim: true).run()
         case "build", "b":
             try await BuildCommand().run()
         case "ship", "s":
@@ -161,7 +164,7 @@ struct BRX: AsyncParsableCommand {
             Terminal.writeLine("")
             Terminal.writeLine("\(Theme.current.error)Unknown command: \(input)\(Ansi.reset)")
             Terminal.writeLine("")
-            Terminal.writeLine("Available commands: run, build, ship, publish, devices, status, activate, doctor, settings")
+            Terminal.writeLine("Available commands: run, realsim, build, ship, publish, devices, status, activate, doctor, settings")
             Terminal.writeLine("")
         }
     }
