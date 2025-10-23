@@ -29,6 +29,53 @@ struct BuildCommand: AsyncParsableCommand {
         Signature.start()
         defer { Signature.stopBlink() }
         
+        // Check license status and validate
+        if License.isActivated {
+            // Check if license is expired
+            if License.isExpired() {
+                Logger.error("Your license has expired")
+                Terminal.writeLine("")
+                Terminal.writeLine("  \(Theme.current.error)✗\(Ansi.reset) Your license has expired")
+                Terminal.writeLine("  \(Theme.current.muted)→ Renew at: https://brx.dev\(Ansi.reset)")
+                throw LicenseError.custom("License expired")
+            }
+            
+            // Check machine binding
+            let currentMachineId = License.getMachineID()
+            let config = BRXConfig.load()
+            
+            if let boundMachineId = config.license.machineId, boundMachineId != currentMachineId {
+                Logger.error("License is bound to a different machine")
+                Terminal.writeLine("")
+                Terminal.writeLine("  \(Theme.current.error)✗\(Ansi.reset) This license is bound to another machine")
+                Terminal.writeLine("  \(Theme.current.muted)→ Contact support: support@brx.dev\(Ansi.reset)")
+                throw LicenseError.custom("License bound to different machine")
+            }
+            
+            // Periodic online validation (every 7 days)
+            if License.shouldValidateOnline() {
+                Logger.step("🔍", "validating license with brx.dev")
+                do {
+                    let response = try await LicenseAPI.activateOnline(key: config.license.key)
+                    if !response.success {
+                        Logger.warning("License validation failed, continuing with offline mode")
+                    } else {
+                        // Update license info
+                        _ = License.activateWithDetails(
+                            key: config.license.key,
+                            tier: response.tier,
+                            expiresAt: response.expiresAt,
+                            seatsUsed: response.seatsUsed,
+                            seatsTotal: response.seatsTotal
+                        )
+                        Logger.success("license validated successfully")
+                    }
+                } catch {
+                    Logger.warning("Could not validate license online, continuing with offline mode")
+                }
+            }
+        }
+        
         // Check build limit (allows 10 free builds or unlimited with license)
         let (canBuild, _) = License.canBuild()
         guard canBuild else {

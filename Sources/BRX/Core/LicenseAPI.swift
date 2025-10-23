@@ -23,6 +23,7 @@ struct LicenseAPI {
         let success: Bool
         let message: String?
         let tier: String?
+        let expiresAt: String?
         let seatsUsed: Int?
         let seatsTotal: Int?
         
@@ -30,6 +31,7 @@ struct LicenseAPI {
             case success
             case message
             case tier
+            case expiresAt = "expires_at"
             case seatsUsed = "seats_used"
             case seatsTotal = "seats_total"
         }
@@ -49,7 +51,7 @@ struct LicenseAPI {
         )
         
         // Call Supabase Edge Function
-        let url = URL(string: "\(supabaseURL)/functions/v1/activate-license")!
+        let url = URL(string: "https://www.brx.dev/api/activate-license")!
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = "POST"
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")

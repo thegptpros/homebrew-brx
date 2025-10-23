@@ -91,6 +91,7 @@ serve(async (req) => {
           success: true,
           message: 'License already activated on this machine',
           tier: license.product_tier,
+          expiresAt: license.expires_at,
           seatsUsed: license.seats_used,
           seatsTotal: license.seats_total
         }),
@@ -141,6 +142,7 @@ serve(async (req) => {
         success: true,
         message: 'License activated successfully',
         tier: license.product_tier,
+        expiresAt: license.expires_at,
         seatsUsed: newSeatsUsed,
         seatsTotal: license.seats_total
       }),

@@ -28,10 +28,22 @@ struct BRXConfig: Codable {
     struct LicenseInfo: Codable {
         var key: String
         var activatedAt: String
+        var expiresAt: String?
+        var machineId: String?
+        var lastValidated: String?
+        var tier: String?
+        var seatsUsed: Int?
+        var seatsTotal: Int?
         
         enum CodingKeys: String, CodingKey {
             case key
             case activatedAt = "activated_at"
+            case expiresAt = "expires_at"
+            case machineId = "machine_id"
+            case lastValidated = "last_validated"
+            case tier
+            case seatsUsed = "seats_used"
+            case seatsTotal = "seats_total"
         }
     }
     
@@ -69,7 +81,13 @@ struct BRXConfig: Codable {
         ),
         license: LicenseInfo(
             key: "",
-            activatedAt: ""
+            activatedAt: "",
+            expiresAt: nil,
+            machineId: nil,
+            lastValidated: nil,
+            tier: nil,
+            seatsUsed: nil,
+            seatsTotal: nil
         ),
         buildCount: 0
     )

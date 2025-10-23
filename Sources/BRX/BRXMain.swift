@@ -6,7 +6,7 @@ struct BRX: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "brx",
         abstract: "Build, run, and ship iOS apps from your terminal.",
-        version: "3.1.9",
+        version: "3.2.0",
         subcommands: [
             BuildCommand.self,
             RunCommand.self,
@@ -17,7 +17,8 @@ struct BRX: AsyncParsableCommand {
             ShipCommand.self,
             PublishCommand.self,
             ActivateCommand.self,
-            StatusCommand.self
+            StatusCommand.self,
+            WelcomeCommand.self
         ]
     )
     
