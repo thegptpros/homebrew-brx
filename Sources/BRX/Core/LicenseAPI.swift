@@ -8,15 +8,8 @@ struct LicenseAPI {
     struct ActivationRequest: Codable {
         let licenseKey: String
         let machineId: String
-        let machineName: String
+        let hostname: String
         let osVersion: String
-        
-        enum CodingKeys: String, CodingKey {
-            case licenseKey = "license_key"
-            case machineId = "machine_id"
-            case machineName = "machine_name"
-            case osVersion = "os_version"
-        }
     }
     
     struct ActivationResponse: Codable {
@@ -46,7 +39,7 @@ struct LicenseAPI {
         let request = ActivationRequest(
             licenseKey: key,
             machineId: machineId,
-            machineName: machineName,
+            hostname: machineName,
             osVersion: osVersion
         )
         
