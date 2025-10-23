@@ -1,0 +1,40 @@
+# Cursor Rules for BRX iOS Projects
+
+## CRITICAL: Use BRX Commands Only
+
+**NEVER run xcodegen, xcodebuild, or xcrun manually in this project.**
+
+This is a BRX-managed iOS project. Always use these BRX commands instead:
+
+### Build Commands
+- `brx build` - Generate Xcode project and build
+- `brx run` - Build, run on simulator with live reload
+- `brx ship` - Build and upload to TestFlight
+- `brx publish` - Submit to App Store
+
+### Development Workflow
+1. **Start development**: `brx run`
+2. **Make changes**: Edit Swift files in `Sources/`
+3. **Live reload**: BRX automatically rebuilds and relaunches
+4. **Stop**: Press Ctrl+C
+
+### What BRX Handles
+- Xcode project generation (xcodegen)
+- Building (xcodebuild)
+- Simulator management (xcrun simctl)
+- Live reload and file watching
+- Code signing and provisioning
+- App Store submission
+
+### File Structure
+- `Sources/` - Swift source files
+- `Resources/` - Assets, images, etc.
+- `brx.yml` - BRX project configuration
+- `project.yml` - XcodeGen spec (don't edit manually)
+
+### Troubleshooting
+- If you see xcodegen/xcodebuild errors, use `brx build` instead
+- If simulator issues occur, use `brx run` to reset
+- For build problems, run `brx doctor` to diagnose
+
+**Remember: BRX abstracts away all the complex Xcode toolchain commands!**

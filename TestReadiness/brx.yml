@@ -1,0 +1,4 @@
+name: TestReadiness
+bundle_id: com.brx.testreadiness
+project: TestReadiness.xcodeproj
+scheme: TestReadiness

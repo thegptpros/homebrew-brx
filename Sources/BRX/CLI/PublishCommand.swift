@@ -35,7 +35,8 @@ struct PublishCommand: AsyncParsableCommand {
         // Submit for App Store review using App Store Connect API
         try await XcodeTools.submitForReview(
             appleId: appleId ?? config.fastlane.appleId,
-            appPassword: appPassword ?? config.fastlane.appPassword
+            appPassword: appPassword ?? config.fastlane.appPassword,
+            teamId: config.fastlane.teamId.isEmpty ? nil : config.fastlane.teamId
         )
         
         Logger.step("⏳", "processing submission (this may take a moment)...")

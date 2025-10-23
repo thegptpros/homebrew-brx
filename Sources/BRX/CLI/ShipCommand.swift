@@ -49,11 +49,12 @@ struct ShipCommand: AsyncParsableCommand {
         
         Logger.step("☁️", "uploading to TestFlight...")
         
-        // Upload to TestFlight using xcrun altool
+        // Upload to TestFlight using modern notarytool
         try await XcodeTools.uploadToTestFlight(
             ipaPath: ipaPath,
             appleId: appleId ?? config.fastlane.appleId,
-            appPassword: appPassword ?? config.fastlane.appPassword
+            appPassword: appPassword ?? config.fastlane.appPassword,
+            teamId: config.fastlane.teamId.isEmpty ? nil : config.fastlane.teamId
         )
         
         Logger.step("⏳", "processing build (this may take a moment)...")

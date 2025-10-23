@@ -18,7 +18,8 @@ struct BRX: AsyncParsableCommand {
             PublishCommand.self,
             ActivateCommand.self,
             StatusCommand.self,
-            WelcomeCommand.self
+            WelcomeCommand.self,
+            SetupCommand.self
         ]
     )
     
@@ -122,6 +123,7 @@ struct BRX: AsyncParsableCommand {
         Terminal.writeLine("  📱 \(Theme.current.primary)devices\(Ansi.reset)  \(Theme.current.muted)- list/manage simulators & devices\(Ansi.reset)")
         Terminal.writeLine("  🔍 \(Theme.current.primary)doctor\(Ansi.reset)   \(Theme.current.muted)- check environment & dependencies\(Ansi.reset)")
         Terminal.writeLine("  🔑 \(Theme.current.primary)activate\(Ansi.reset) \(Theme.current.muted)- activate license\(Ansi.reset)")
+        Terminal.writeLine("  ⚙️  \(Theme.current.primary)setup\(Ansi.reset)     \(Theme.current.muted)- configure deployment credentials\(Ansi.reset)")
         Terminal.writeLine("")
         Terminal.writeLine("\(Theme.current.muted)Run \(Theme.current.primary)brx <command> --help\(Theme.current.muted) for detailed help\(Ansi.reset)")
         Terminal.writeLine("\(Theme.current.muted)Visit: https://github.com/thegptpros/brx\(Ansi.reset)")
@@ -161,11 +163,13 @@ struct BRX: AsyncParsableCommand {
             try await DoctorCommand().run()
         case "settings", "set":
             try await SettingsCommand().run()
+        case "setup":
+            try await SetupCommand().run()
         default:
             Terminal.writeLine("")
             Terminal.writeLine("\(Theme.current.error)Unknown command: \(input)\(Ansi.reset)")
             Terminal.writeLine("")
-            Terminal.writeLine("Available commands: run, realsim, build, ship, publish, devices, status, activate, doctor, settings")
+            Terminal.writeLine("Available commands: run, realsim, build, ship, publish, devices, status, activate, doctor, settings, setup")
             Terminal.writeLine("")
         }
     }

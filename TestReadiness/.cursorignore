@@ -1,0 +1,5 @@
+# Cursor: Don't auto-run xcodegen/xcodebuild commands
+# Use 'brx build' and 'brx run' instead
+project.yml
+*.xcodeproj
+DerivedData/
