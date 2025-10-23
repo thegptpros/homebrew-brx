@@ -83,7 +83,7 @@ struct RunCommand: AsyncParsableCommand {
         
         // Boot device if needed (only for simulators)
         if targetDeviceInfo.type == .simulator {
-            Logger.step("📱", "booting \(targetDevice) (Simulator)")
+        Logger.step("📱", "booting \(targetDevice) (Simulator)")
             try DeviceManager.bootIfNeeded(targetDeviceInfo)
         } else {
             Logger.step("📱", "connecting to \(targetDevice) (Physical Device)")
@@ -108,7 +108,7 @@ struct RunCommand: AsyncParsableCommand {
         
         if targetDeviceInfo.type == .simulator {
             let (pid, osVersion) = try Simulator.launch(bundleId: spec.bundleId, onUDID: targetDeviceInfo.udid)
-            Logger.success("running \"\(spec.name)\" on \(targetDevice) (ios \(osVersion)) — pid \(pid)")
+        Logger.success("running \"\(spec.name)\" on \(targetDevice) (ios \(osVersion)) — pid \(pid)")
         } else {
             try DeviceManager.launch(bundleId: spec.bundleId, on: targetDeviceInfo)
             Logger.success("running \"\(spec.name)\" on \(targetDevice) (Physical Device)")
