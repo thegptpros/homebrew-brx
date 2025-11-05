@@ -129,6 +129,11 @@ struct BuildCommand: AsyncParsableCommand {
         // Use DeviceManager (same approach as RunCommand - this WORKS)
         let targetDeviceInfo = try DeviceManager.ensureDevice(named: targetDevice)
         
+        // Boot simulator if needed (critical for xcodebuild to find it)
+        if targetDeviceInfo.type == .simulator {
+            try DeviceManager.bootIfNeeded(targetDeviceInfo)
+        }
+        
         Logger.step("⚙️", "building \(spec.name) (\(configuration))")
         
         // Build for the appropriate platform (same as RunCommand)
@@ -197,6 +202,11 @@ struct BuildCommand: AsyncParsableCommand {
         }
         // Use DeviceManager (same approach as RunCommand - this WORKS)
         let targetDeviceInfo = try DeviceManager.ensureDevice(named: targetDevice)
+        
+        // Boot simulator if needed (critical for xcodebuild to find it)
+        if targetDeviceInfo.type == .simulator {
+            try DeviceManager.bootIfNeeded(targetDeviceInfo)
+        }
         
         // Use UDID-based destination (same as RunCommand)
         let destination: String
