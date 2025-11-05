@@ -16,6 +16,7 @@ enum XcodeTools {
             "-scheme", scheme,
             "-configuration", configuration,
             "-destination", destination,
+            "-destination-timeout", "10",
             "-derivedDataPath", derivedDataPath
         ]
         
@@ -61,7 +62,7 @@ enum XcodeTools {
         
         let result = try Shell.run("/usr/bin/xcodebuild", args: args, timeout: 300)
         
-        // Check if build failed due to signing issues
+        // Simple error handling - just check for signing issues
         if !result.success {
             let errorOutput = result.stderr.lowercased()
             let isSigningError = errorOutput.contains("no profiles") || 
@@ -88,6 +89,7 @@ enum XcodeTools {
                     throw XcodeError.buildFailed(retryResult.stderr)
                 }
             } else {
+                // For other errors, just throw with helpful message
                 throw XcodeError.buildFailed(result.stderr)
             }
         }

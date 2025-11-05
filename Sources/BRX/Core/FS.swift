@@ -36,6 +36,10 @@ enum FS {
         try fileManager.removeItem(atPath: path)
     }
     
+    static func removeDirectory(_ path: String) throws {
+        try fileManager.removeItem(atPath: path)
+    }
+    
     static func listDirectory(_ path: String) throws -> [String] {
         return try fileManager.contentsOfDirectory(atPath: path)
     }

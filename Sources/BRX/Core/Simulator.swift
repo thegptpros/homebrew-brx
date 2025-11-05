@@ -161,14 +161,191 @@ enum Simulator {
     
     // MARK: - Device Operations
     
+    static func getRuntimeVersion(for udid: String) throws -> String {
+        let result = try Shell.run("/usr/bin/xcrun", args: ["simctl", "list", "devices", "--json"])
+        
+        guard result.success else {
+            throw SimulatorError.deviceListFailed
+        }
+        
+        let data = result.stdout.data(using: .utf8)!
+        let json = try JSONSerialization.jsonObject(with: data) as! [String: Any]
+        let devicesDict = json["devices"] as! [String: [[String: Any]]]
+        
+        // Find the device and extract its runtime version
+        for (runtimeKey, devices) in devicesDict {
+            for device in devices {
+                if let deviceUDID = device["udid"] as? String,
+                   deviceUDID == udid {
+                    // Extract version from runtime key like "com.apple.CoreSimulator.SimRuntime.iOS-26-0"
+                    // Format: com.apple.CoreSimulator.SimRuntime.iOS-X-Y
+                    if runtimeKey.contains("iOS-") {
+                        let parts = runtimeKey.components(separatedBy: ".")
+                        if let runtimePart = parts.last, runtimePart.hasPrefix("iOS-") {
+                            // Convert iOS-26-0 to 26.0
+                            let version = runtimePart.replacingOccurrences(of: "iOS-", with: "").replacingOccurrences(of: "-", with: ".")
+                            return version
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Fallback: get latest available iOS runtime version
+        let runtimeID = try latestRuntimeID(for: .iOS)
+        // Format: com.apple.CoreSimulator.SimRuntime.iOS-X-Y
+        if runtimeID.contains("iOS-") {
+            let parts = runtimeID.components(separatedBy: ".")
+            if let runtimePart = parts.last, runtimePart.hasPrefix("iOS-") {
+                // Convert iOS-26-0 to 26.0
+                let version = runtimePart.replacingOccurrences(of: "iOS-", with: "").replacingOccurrences(of: "-", with: ".")
+                return version
+            }
+        }
+        
+        // Last resort: default to a reasonable version
+        return "latest"
+    }
+    
+    /// Get all available iOS runtime versions, sorted by version (newest first)
+    static func getAllAvailableRuntimes(for platform: Platform) throws -> [String] {
+        let result = try Shell.run("/usr/bin/xcrun", args: ["simctl", "list", "runtimes", "--json"])
+        
+        guard result.success else {
+            throw SimulatorError.runtimeListFailed
+        }
+        
+        let data = result.stdout.data(using: .utf8)!
+        let json = try JSONSerialization.jsonObject(with: data) as! [String: Any]
+        let runtimesArray = json["runtimes"] as! [[String: Any]]
+        
+        let availableRuntimes = runtimesArray
+            .filter { ($0["isAvailable"] as? Bool) == true }
+            .filter { ($0["identifier"] as? String)?.contains(platform.identifier) == true }
+            .compactMap { runtime -> String? in
+                guard let identifier = runtime["identifier"] as? String else { return nil }
+                if identifier.contains("iOS-") {
+                    let parts = identifier.components(separatedBy: ".")
+                    if let runtimePart = parts.last, runtimePart.hasPrefix("iOS-") {
+                        // Convert iOS-26-0 to 26.0
+                        let version = runtimePart.replacingOccurrences(of: "iOS-", with: "").replacingOccurrences(of: "-", with: ".")
+                        return version
+                    }
+                }
+                return nil
+            }
+            .sorted { v1, v2 in
+                // Sort by version number (newest first)
+                return v1.compare(v2, options: .numeric) == .orderedDescending
+            }
+        
+        return availableRuntimes
+    }
+    
+    /// Find the closest available runtime version to the requested one
+    /// Falls back to latest if exact match not found
+    static func findClosestRuntime(platform: Platform, preferredVersion: String? = nil) throws -> String {
+        let availableVersions = try getAllAvailableRuntimes(for: platform)
+        
+        guard !availableVersions.isEmpty else {
+            throw SimulatorError.noRuntimeAvailable(platform)
+        }
+        
+        // If no preferred version, return latest
+        guard let preferred = preferredVersion else {
+            return availableVersions.first!
+        }
+        
+        // Try to find exact match first
+        if availableVersions.contains(preferred) {
+            return preferred
+        }
+        
+        // Find closest match (prefer newer versions)
+        // Find first version that's >= preferred, or fall back to latest
+        for version in availableVersions {
+            if version.compare(preferred, options: .numeric) != .orderedAscending {
+                return version
+            }
+        }
+        
+        // Fall back to latest available
+        return availableVersions.first!
+    }
+    
     static func bootIfNeeded(udid: String) throws {
-        let result = try Shell.run("/usr/bin/xcrun", args: [
-            "simctl", "bootstatus", udid, "-b"
+        // First check if already booted
+        let statusResult = try Shell.run("/usr/bin/xcrun", args: [
+            "simctl", "list", "devices", "--json"
         ])
         
-        if !result.success && !result.stderr.contains("Unable to lookup in current state: Booted") {
+        guard statusResult.success else {
             throw SimulatorError.bootFailed(udid)
         }
+        
+        let data = statusResult.stdout.data(using: .utf8)!
+        let json = try JSONSerialization.jsonObject(with: data) as! [String: Any]
+        let devicesDict = json["devices"] as! [String: [[String: Any]]]
+        
+        var isBooted = false
+        for (_, devices) in devicesDict {
+            for device in devices {
+                if let deviceUDID = device["udid"] as? String,
+                   deviceUDID == udid,
+                   let state = device["state"] as? String {
+                    isBooted = (state == "Booted")
+                    break
+                }
+            }
+        }
+        
+        if isBooted {
+            return
+        }
+        
+        // Boot the simulator
+        let bootResult = try Shell.run("/usr/bin/xcrun", args: [
+            "simctl", "boot", udid
+        ])
+        
+        // If boot fails because it's already booted, that's fine
+        if !bootResult.success && !bootResult.stderr.contains("Unable to boot device in current state: Booted") {
+            throw SimulatorError.bootFailed(udid)
+        }
+        
+        // Wait for boot to complete (with timeout)
+        let maxAttempts = 30
+        var attempts = 0
+        while attempts < maxAttempts {
+            Thread.sleep(forTimeInterval: 1.0)
+            
+            let checkResult = try Shell.run("/usr/bin/xcrun", args: [
+                "simctl", "list", "devices", "--json"
+            ])
+            
+            guard checkResult.success else { break }
+            
+            let checkData = checkResult.stdout.data(using: .utf8)!
+            let checkJson = try JSONSerialization.jsonObject(with: checkData) as! [String: Any]
+            let checkDevicesDict = checkJson["devices"] as! [String: [[String: Any]]]
+            
+            for (_, devices) in checkDevicesDict {
+                for device in devices {
+                    if let deviceUDID = device["udid"] as? String,
+                       deviceUDID == udid,
+                       let state = device["state"] as? String {
+                        if state == "Booted" {
+                            return
+                        }
+                    }
+                }
+            }
+            
+            attempts += 1
+        }
+        
+        // If we get here, boot didn't complete
+        throw SimulatorError.bootFailed(udid)
     }
     
     static func install(appPath: String, toUDID udid: String) throws {

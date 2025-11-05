@@ -1,0 +1,4 @@
+name: TestApp2
+bundle_id: com.brx.testapp2
+project: TestApp2.xcodeproj
+scheme: TestApp2

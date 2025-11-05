@@ -1,0 +1,4 @@
+name: TestOS
+bundle_id: com.brx.testos
+project: TestOS.xcodeproj
+scheme: TestOS

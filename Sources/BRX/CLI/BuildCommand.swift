@@ -53,14 +53,12 @@ struct BuildCommand: AsyncParsableCommand {
             }
             
             // Periodic online validation (every 7 days)
+            // Silent validation - only show messages if there's an actual problem
             if License.shouldValidateOnline() {
-                Logger.step("🔍", "validating license with brx.dev")
                 do {
                     let response = try await LicenseAPI.activateOnline(key: config.license.key)
-                    if !response.success {
-                        Logger.warning("License validation failed, continuing with offline mode")
-                    } else {
-                        // Update license info
+                    if response.success {
+                        // Update license info silently
                         _ = License.activateWithDetails(
                             key: config.license.key,
                             tier: response.tier,
@@ -68,10 +66,20 @@ struct BuildCommand: AsyncParsableCommand {
                             seatsUsed: response.seatsUsed,
                             seatsTotal: response.seatsTotal
                         )
-                        Logger.success("license validated successfully")
+                        // Success - no message needed, just works
+                    } else {
+                        // Only warn if validation actually failed (not just offline)
+                        if response.message?.contains("seat limit") == true || 
+                           response.message?.contains("expired") == true ||
+                           response.message?.contains("not active") == true {
+                            Logger.warning("License issue: \(response.message ?? "Validation failed")")
+                        }
+                        // If it's just offline/network, silently continue
                     }
                 } catch {
-                    Logger.warning("Could not validate license online, continuing with offline mode")
+                    // Network errors are silent - offline mode is fine
+                    // Only log actual errors
+                    Logger.debug("License validation skipped (offline mode)")
                 }
             }
         }
@@ -118,12 +126,20 @@ struct BuildCommand: AsyncParsableCommand {
             targetDevice = config.defaults.iosDevice
         }
         
-        // Ensure device exists for destination
-        let udid = try Simulator.ensureDevice(named: targetDevice, platform: .iOS)
+        // Use DeviceManager (same approach as RunCommand - this WORKS)
+        let targetDeviceInfo = try DeviceManager.ensureDevice(named: targetDevice)
         
         Logger.step("⚙️", "building \(spec.name) (\(configuration))")
         
-        let destination = "platform=iOS Simulator,id=\(udid)"
+        // Build for the appropriate platform (same as RunCommand)
+        let destination: String
+        switch targetDeviceInfo.type {
+        case .simulator:
+            destination = "platform=iOS Simulator,id=\(targetDeviceInfo.udid)"
+        case .physical:
+            destination = "generic/platform=iOS"
+        }
+        
         let appPath = try XcodeTools.build(
             project: projectPath,
             scheme: scheme,
@@ -179,8 +195,17 @@ struct BuildCommand: AsyncParsableCommand {
         } else {
             targetDevice = config.defaults.iosDevice
         }
-        let udid = try Simulator.ensureDevice(named: targetDevice, platform: .iOS)
-        let destination = "platform=iOS Simulator,id=\(udid)"
+        // Use DeviceManager (same approach as RunCommand - this WORKS)
+        let targetDeviceInfo = try DeviceManager.ensureDevice(named: targetDevice)
+        
+        // Use UDID-based destination (same as RunCommand)
+        let destination: String
+        switch targetDeviceInfo.type {
+        case .simulator:
+            destination = "platform=iOS Simulator,id=\(targetDeviceInfo.udid)"
+        case .physical:
+            destination = "generic/platform=iOS"
+        }
         
         _ = try XcodeTools.build(
             project: spec.project ?? "\(spec.name).xcodeproj",

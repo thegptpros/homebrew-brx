@@ -1,0 +1,4 @@
+name: TestValidation
+bundle_id: com.brx.testvalidation
+project: TestValidation.xcodeproj
+scheme: TestValidation

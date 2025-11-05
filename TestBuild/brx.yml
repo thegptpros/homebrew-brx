@@ -1,0 +1,4 @@
+name: TestBuild
+bundle_id: com.brx.testbuild
+project: TestBuild.xcodeproj
+scheme: TestBuild

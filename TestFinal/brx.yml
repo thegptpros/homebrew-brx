@@ -1,0 +1,4 @@
+name: TestFinal
+bundle_id: com.brx.testfinal
+project: TestFinal.xcodeproj
+scheme: TestFinal

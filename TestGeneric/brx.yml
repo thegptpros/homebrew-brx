@@ -1,0 +1,4 @@
+name: TestGeneric
+bundle_id: com.brx.testgeneric
+project: TestGeneric.xcodeproj
+scheme: TestGeneric

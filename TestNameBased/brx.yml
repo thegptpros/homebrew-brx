@@ -1,0 +1,4 @@
+name: TestNameBased
+bundle_id: com.brx.testnamebased
+project: TestNameBased.xcodeproj
+scheme: TestNameBased

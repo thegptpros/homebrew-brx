@@ -1,0 +1,94 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "BRX: Build",
+      "type": "shell",
+      "command": "brx",
+      "args": ["build"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": [],
+      "detail": "Generate Xcode project and build using BRX"
+    },
+    {
+      "label": "BRX: Run (Live Reload)",
+      "type": "shell",
+      "command": "brx",
+      "args": ["run"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": [],
+      "detail": "Build, run on simulator with live reload using BRX",
+      "isBackground": true
+    },
+    {
+      "label": "BRX: Ship to TestFlight",
+      "type": "shell",
+      "command": "brx",
+      "args": ["ship"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": [],
+      "detail": "Build and upload to TestFlight using BRX"
+    },
+    {
+      "label": "BRX: Publish to App Store",
+      "type": "shell",
+      "command": "brx",
+      "args": ["publish"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": [],
+      "detail": "Submit to App Store using BRX"
+    },
+    {
+      "label": "BRX: Doctor",
+      "type": "shell",
+      "command": "brx",
+      "args": ["doctor"],
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": [],
+      "detail": "Diagnose BRX and Xcode setup issues"
+    }
+  ]
+}
