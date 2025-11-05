@@ -1,0 +1,4 @@
+name: TestQA
+bundle_id: com.brx.testqa
+project: TestQA.xcodeproj
+scheme: TestQA

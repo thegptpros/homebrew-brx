@@ -62,7 +62,7 @@ enum XcodeTools {
         
         let result = try Shell.run("/usr/bin/xcodebuild", args: args, timeout: 300)
         
-        // Simple error handling - just check for signing issues
+        // Intelligent error handling
         if !result.success {
             let errorOutput = result.stderr.lowercased()
             let isSigningError = errorOutput.contains("no profiles") || 
@@ -70,6 +70,10 @@ enum XcodeTools {
                                 errorOutput.contains("provisioning profile") ||
                                 errorOutput.contains("code signing") ||
                                 errorOutput.contains("not codesigned")
+            
+            // Check for SDK/runtime mismatch
+            let isSDKMismatch = errorOutput.contains("is not installed") && 
+                               (errorOutput.contains("ios") || errorOutput.contains("sdk"))
             
             if isSigningError && isPhysicalDevice {
                 Logger.step("🔧", "signing issue detected - opening Xcode for setup")
@@ -88,6 +92,56 @@ enum XcodeTools {
                 guard retryResult.success else {
                     throw XcodeError.buildFailed(retryResult.stderr)
                 }
+            } else if isSDKMismatch && destination.contains("Simulator") {
+                // SDK/runtime mismatch - try using available SDK
+                Logger.step("🔧", "SDK mismatch detected - trying with available iOS runtime")
+                
+                // Get available iOS runtimes
+                let availableRuntimes = try Simulator.getAllAvailableRuntimes(for: .iOS)
+                guard let latestRuntime = availableRuntimes.first else {
+                    throw XcodeError.buildFailed("No iOS runtime available. Install via Xcode > Settings > Platforms")
+                }
+                
+                // Extract SDK version from runtime (e.g., "26.0" -> "iphonesimulator26.0")
+                let sdkVersion = latestRuntime.replacingOccurrences(of: ".", with: "")
+                let sdk = "iphonesimulator\(sdkVersion)"
+                
+                // Try with explicit SDK
+                var newArgs = args
+                newArgs.insert("-sdk", at: newArgs.firstIndex(of: "build") ?? newArgs.count - 1)
+                newArgs.insert(sdk, at: (newArgs.firstIndex(of: "-sdk") ?? newArgs.count - 1) + 1)
+                
+                Logger.step("🔄", "retrying with iOS \(latestRuntime) SDK...")
+                let retryResult = try Shell.run("/usr/bin/xcodebuild", args: newArgs, timeout: 300)
+                
+                if retryResult.success {
+                    Logger.success("build succeeded with iOS \(latestRuntime) SDK")
+                    let platform = destination.contains("Simulator") ? "iphonesimulator" : "iphoneos"
+                    return try findApp(in: derivedDataPath, configuration: configuration, platform: platform)
+                } else {
+                    // Fallback: try platform-only destination
+                    Logger.step("🔄", "trying platform-only destination...")
+                    var platformArgs = args
+                    if let destIndex = platformArgs.firstIndex(of: "-destination") {
+                        platformArgs[destIndex + 1] = "platform=iOS Simulator"
+                    }
+                    
+                    let platformResult = try Shell.run("/usr/bin/xcodebuild", args: platformArgs, timeout: 300)
+                    if platformResult.success {
+                        Logger.success("build succeeded")
+                        let platform = destination.contains("Simulator") ? "iphonesimulator" : "iphoneos"
+                        return try findApp(in: derivedDataPath, configuration: configuration, platform: platform)
+                    }
+                }
+                
+                // If all retries fail, show helpful error
+                Terminal.writeLine("")
+                Terminal.writeLine("  \(Theme.current.error)❌ Build failed: SDK/runtime version mismatch\(Ansi.reset)")
+                Terminal.writeLine("  \(Theme.current.muted)→ Your Xcode version (\(XcodeTools.getXcodeVersion() ?? "unknown")) requires iOS runtime that's not installed\(Ansi.reset)")
+                Terminal.writeLine("  \(Theme.current.muted)→ Available runtime: iOS \(latestRuntime)\(Ansi.reset)")
+                Terminal.writeLine("  \(Theme.current.muted)→ Fix: Install matching iOS runtime in Xcode > Settings > Platforms\(Ansi.reset)")
+                Terminal.writeLine("")
+                throw XcodeError.buildFailed(result.stderr)
             } else {
                 // For other errors, just throw with helpful message
                 throw XcodeError.buildFailed(result.stderr)
